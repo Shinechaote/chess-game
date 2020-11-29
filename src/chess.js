@@ -78,6 +78,7 @@ class Board {
             this.isWhiteCheck = this.isCheck(WHITE, this.board);
             this.isBlackCheck = this.isCheck(BLACK, this.board);
             this.current_color = this.current_color == WHITE ? BLACK : WHITE;
+
             return true;
         }
         return false;
@@ -95,7 +96,11 @@ class Board {
     isMovePosible(startRow, startCol, destinationRow, destinationCol)
     {
         //Überprüft ob der Zug nach allen Schachregeln legal ist
-        if(!(0 <= startRow < 8) || !(0 <= startCol < 8) || !(0 <= destinationRow < 8) || !(0 <= destinationCol < 8) )
+        if(startRow < 0 || startRow > 7 || destinationRow < 0 || destinationRow > 7)
+        {
+            return false;
+        }
+        if(startCol < 0 || startCol > 7 || destinationCol < 0 || destinationCol > 7 )
         {
             return false;
         }
@@ -158,14 +163,16 @@ class Board {
                 kingY = Math.floor(i/8);
             }
         }
-        
+        if(kingX == -1 || kingY == -1)
+        {
+            return true;
+        }
         //Zeile und Spalte checken
         //Zeile
         var row = board[kingY];
         //Rechtsseitig vom König in der Zeile
         for(var i = kingX+1; i<8;i++)
         {
-            
             if(parseInt(row[i].slice(1,2)) == color)
             {
                 break;
@@ -352,7 +359,7 @@ class Board {
                         }
                         break;
                         case "q":
-                        for(var k = 0; k<8;k++)
+                        for(var k = 1; k<8;k++)
                         {
                             if(this.isMovePosible(i,j,i+k,j) || this.isMovePosible(i,j,i-k,j) || this.isMovePosible(i,j,i,j+k) || this.isMovePosible(i,j,i,j-k))
                             {
@@ -365,9 +372,9 @@ class Board {
                         }
                         break;
                         case "r":
-                        for(var k = 0; k<8;k++)
+                        for(var k = 1; k<8;k++)
                         {
-                            if(this.isMovePosible(i,j,i+k,j) || this.isMovePosible(i,j,i-k,j || this.isMovePosible(i,j,i,j+k) || this.isMovePosible(i,j,i,j-k)))
+                            if(this.isMovePosible(i,j,i+k,j) || this.isMovePosible(i,j,i-k,j) || this.isMovePosible(i,j,i,j+k) || this.isMovePosible(i,j,i,j-k))
                             {
                                 return false;
                             }
@@ -562,7 +569,7 @@ class Board {
     {
         if(startRow == destinationRow || startCol == destinationCol)
         {
-            return isRookMovePossible(startRow, startCol, destinationRow, destinationCol);
+            return this.isRookMovePossible(startRow, startCol, destinationRow, destinationCol);
         }
         else
         {
@@ -727,6 +734,7 @@ if(printDebug[0])
     board.printBoard(board.board);
     console.log(" ")
 }
+console.log("Checkmate Bauer: " + String(board.isCheckMate()));
 console.log("Bauer Unit Test: " + String(fieldEquals(board.board,testBoard)));
 
 
@@ -802,15 +810,15 @@ testBoard = [["r1", "n1", "b1", "q1", "  ", "b1", "n1", "r1"],
 ["  ", "  ", "  ", "  ", "  ", "n0", "  ", "  "],
 ["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
 ["r0", "n0", "b0", "q0", "k0", "  ", "  ", "r0"]]
-moves = [[6,4,4,4],[1,4,3,4],[7,6,5,5],[1,3,2,3],[7,5,3,1],[1,0,1,1],[0,4,1,4]];
+moves = [[6,4,4,4],[1,4,3,4],[7,3,3,7],[0,1,2,2],[7,5,4,2,],[0,6,2,5],[3,7,1,5]];
 var moveAcceptionExpected = [true,true,true,true,true,false,true];
 var moveAcception = [];
 for(var i = 0; i<moves.length;i++)
 {
     if(printDebug[3])
     {
-        board.printBoard(board.board);
-        console.log(" ")
+        // board.printBoard(board.board);
+        console.log(" ");
     }
     startX = moves[i][0];
     startY = moves[i][1];
@@ -818,11 +826,12 @@ for(var i = 0; i<moves.length;i++)
     endY = moves[i][3];
     moveAcception.push(board.movePiece(startX,startY,endX,endY));
 }
+
 if(printDebug[3])
 {
     board.printBoard(board.board);
-    console.log(" ")
 }
+console.log("Schachmatt Unit Test: " + String(board.isCheckMate()));
 console.log("Schach Unit Test Feldgleichheit: " + String(fieldEquals(board.board,testBoard)));
 console.log("Schach Unit Test Angenommene Z\u00FCge: " + String(equals(moveAcception,moveAcceptionExpected)));
 
