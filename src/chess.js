@@ -59,9 +59,9 @@ class Board {
             //Workaround damit man rochieren kann
             if(this.castling)
             {
-                rookRow = startRow;
-                rookCol = destinationCol == 6 ? 7 : 0;
-                castleCol = rookCol == 7 ? 5 : 3;
+                var rookRow = startRow;
+                var rookCol = destinationCol == 6 ? 7 : 0;
+                var castleCol = rookCol == 7 ? 5 : 3;
                 this.board[rookRow][castleCol] = this.board[rookRow][rookCol]
                 this.board[rookRow][rookCol] = EMPTY;
                 this.castling = false;
@@ -111,7 +111,7 @@ class Board {
         switch(this.board[startRow][startCol].slice(0,1))
         {
             case "p":
-            return (this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
+                return (this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             case "k":
             var canMove = (this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             if(canMove)
@@ -227,7 +227,7 @@ class Board {
         }
         
         //Diagonale checken + Bauern checken
-        var diagonals = this.getDiagonals(kingX,kingY);
+        var diagonals = this.getDiagonals(kingX,kingY, board);
         //Von Links oben nach Rechts unten Diagonale
         //Unterhalb des Köngis
         var counter = 1;
@@ -428,7 +428,7 @@ class Board {
         return possibleMoves;
     }
     
-    getDiagonals(x,y)
+    getDiagonals(x,y, board)
     {
         var diagonals = [];
         //Von Links oben nach Rechts unten Diagonale
@@ -437,7 +437,7 @@ class Board {
         var firstDiagonal = [];
         while(curX < 8 && curY < 8)
         {
-            firstDiagonal.push(this.board[curY][curX])
+            firstDiagonal.push(board[curY][curX])
             curY++;
             curX++;
         }
@@ -448,7 +448,7 @@ class Board {
         var secondDiagonal = [];
         while(curX >= 0 && curY < 8)
         {
-            secondDiagonal.push(this.board[curY][curX])
+            secondDiagonal.push(board[curY][curX])
             curY++;
             curX--;
         }
@@ -468,6 +468,7 @@ class Board {
         //Bauer läuft nach vorne
         // colorShift ist dafür da um eine Reihe weiter zu gehen aus Sicht der jeweiligen Farbe also für weiß(=0) -1 und schwarz(1) +1
         var colorShiftRow = (-1)**(this.current_color+1)
+        //Überprüft ob der ausgewählte Bauer die zu spielende Farbe hat und in die richtige Richtung will
         if(parseInt(this.board[startRow][startCol].slice(1,2)) != this.current_color || Math.abs(destinationRow-startRow) != (destinationRow-startRow)*colorShiftRow )
         {
             return false;
@@ -483,7 +484,7 @@ class Board {
             //Läuft 2 Felder
             if(startRow == 6-this.current_color*5 && distanceForward == 2)
             {
-                if(this.board[destinationRow][destinationCol] == EMPTY && this.board[destinationRow+colorShiftRow][destinationCol+colorShiftRow] == EMPTY)
+                if(this.board[destinationRow][destinationCol] == EMPTY && this.board[destinationRow-colorShiftRow][destinationCol] == EMPTY)
                 {
                     return true;
                 }
@@ -537,27 +538,33 @@ class Board {
             }
         }
         //Lange oder kurze Rochade überprüfen
-        var shortCastle = colDifference == destinationCol-startCol
+        var shortCastle = (colDifference == destinationCol-startCol);
         if(this.castlePossible[this.current_color][shortCastle ? 1 : 0])
         {
             if(shortCastle)
             {
+
                 for(var i = 1;i<3;i++)
                 {
-                    if(this.board[destinationRow][startCol+i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,destinationCol+k))
+                    if(this.board[destinationRow][startCol+i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol+i))
                     {
+                        console.log(i)
+                        console.log(this.board[destinationRow][startCol+i]);
+                        this.printBoard(this.board);
                         return false;
                     }
                 }
+                this.castling = true;
                 return true;
             }
             for(var i = 1;i<4;i++)
             {
-                if(this.board[destinationRow][startCol-i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,destinationCol-k))
+                if(this.board[destinationRow][startCol-i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol-i))
                 {
                     return false;
                 }
             }
+            this.castling = true;
             return true;
         }
         
@@ -614,7 +621,7 @@ class Board {
     
     isBishopMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
-        var diagonals = this.getDiagonals(startRow,startCol);
+        var diagonals = this.getDiagonals(startRow,startCol, this.board);
         if(Math.abs(startRow-destinationRow) != Math.abs(startCol-destinationCol))
         {
             return false;
@@ -702,7 +709,7 @@ function equals(arr,arr2)
 }
 
 var board = new Board();
-var printDebug = [false,false,false,false];
+var printDebug = [false,false,false,true];
 var testBoard = [["r1", "n1", "b1", "q1", "k1", "b1", "n1", "r1"],
 ["p1", "p1", "p1", "  ", "  ", "  ", "p1", "p1"],
 ["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
@@ -716,124 +723,137 @@ var moves = [[6,2,4,2],[1,3,3,3],[4,2,3,3],[1,4,3,4],[3,3,2,4],[1,5,2,4]]
 //Unit Tests
 
 //Bauer Unit
-for(var i = 0; i<moves.length;i++)
-{
-    if(printDebug[0])
-    {
-        board.printBoard(board.board);
-        console.log(" ")
-    }
-    startX = moves[i][0];
-    startY = moves[i][1];
-    endX = moves[i][2];
-    endY = moves[i][3];
-    board.movePiece(startX,startY,endX,endY);
-}
-if(printDebug[0])
-{
-    board.printBoard(board.board);
-    console.log(" ")
-}
-console.log("Checkmate Bauer: " + String(board.isCheckMate()));
-console.log("Bauer Unit Test: " + String(fieldEquals(board.board,testBoard)));
+// for(var i = 0; i<moves.length;i++)
+// {
+//     if(printDebug[0])
+//     {
+//         board.printBoard(board.board);
+//         console.log(" ")
+//     }
+//     startX = moves[i][0];
+//     startY = moves[i][1];
+//     endX = moves[i][2];
+//     endY = moves[i][3];
+//     board.movePiece(startX,startY,endX,endY);
+// }
+// if(printDebug[0])
+// {
+//     board.printBoard(board.board);
+//     console.log(" ")
+// }
+// console.log("Checkmate Bauer: " + (board.isCheckMate() ? "FAILED" : "PASSED"));
+// console.log("Bauer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
 
 
-//Springer Unit
-board = new Board();
-moves = [[7,1,5,2],[1,3,3,3],[5,2,3,3],[1,0,2,0],[3,3,1,2]]
-testBoard = [["r1", "n1", "b1", "q1", "k1", "b1", "n1", "r1"],
-["  ", "p1", "n0", "  ", "p1", "p1", "p1", "p1"],
-["p1", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["p0", "p0", "p0", "p0", "p0", "p0", "p0", "p0"],
-["r0", "  ", "b0", "q0", "k0", "b0", "n0", "r0"]]
-for(var i = 0; i<moves.length;i++)
-{
-    if(printDebug[1])
-    {
-        board.printBoard(board.board);
-        console.log(" ")
-    }
-    startX = moves[i][0];
-    startY = moves[i][1];
-    endX = moves[i][2];
-    endY = moves[i][3];
-    board.movePiece(startX,startY,endX,endY);
-}
-if(printDebug[1])
-{
-    board.printBoard(board.board);
-    console.log(" ")
-}
-console.log("Springer Unit Test: " + String(fieldEquals(board.board,testBoard)));
+// //Springer Unit
+// board = new Board();
+// moves = [[7,1,5,2],[1,3,3,3],[5,2,3,3],[1,0,2,0],[3,3,1,2]]
+// testBoard = [["r1", "n1", "b1", "q1", "k1", "b1", "n1", "r1"],
+// ["  ", "p1", "n0", "  ", "p1", "p1", "p1", "p1"],
+// ["p1", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+// ["p0", "p0", "p0", "p0", "p0", "p0", "p0", "p0"],
+// ["r0", "  ", "b0", "q0", "k0", "b0", "n0", "r0"]]
+// for(var i = 0; i<moves.length;i++)
+// {
+//     if(printDebug[1])
+//     {
+//         board.printBoard(board.board);
+//         console.log(" ")
+//     }
+//     startX = moves[i][0];
+//     startY = moves[i][1];
+//     endX = moves[i][2];
+//     endY = moves[i][3];
+//     board.movePiece(startX,startY,endX,endY);
+// }
+// if(printDebug[1])
+// {
+//     board.printBoard(board.board);
+//     console.log(" ")
+// }
+// console.log("Springer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
 
-// Läufer Unit
-board = new Board();
-moves = [[6,4,5,4],[1,4,3,4],[7,5,3,1],[0,5,4,1],[3,1,2,2],[4,1,5,0],[2,2,5,5],[5,0,2,3],[5,5,2,2]]
-testBoard = [["r1", "n1", "b1", "q1", "k1", "  ", "n1", "r1"],
-["p1", "p1", "p1", "p1", "  ", "p1", "p1", "p1"],
-["  ", "  ", "b0", "b1", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "p0", "  ", "  ", "  "],
-["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
-["r0", "n0", "b0", "q0", "k0", "  ", "n0", "r0"]];
-for(var i = 0; i<moves.length;i++)
-{
-    if(printDebug[2])
-    {
-        board.printBoard(board.board);
-        console.log(" ")
-    }
-    startX = moves[i][0];
-    startY = moves[i][1];
-    endX = moves[i][2];
-    endY = moves[i][3];
-    board.movePiece(startX,startY,endX,endY);
-}
-if(printDebug[2])
-{
-    board.printBoard(board.board);
-    console.log(" ")
-}
-console.log("L\u00E4ufer Unit Test: " + String(fieldEquals(board.board,testBoard)));
+// // Läufer Unit
+// board = new Board();
+// moves = [[6,4,5,4],[1,4,3,4],[7,5,3,1],[0,5,4,1],[3,1,2,2],[4,1,5,0],[2,2,5,5],[5,0,2,3],[5,5,2,2]]
+// testBoard = [["r1", "n1", "b1", "q1", "k1", "  ", "n1", "r1"],
+// ["p1", "p1", "p1", "p1", "  ", "p1", "p1", "p1"],
+// ["  ", "  ", "b0", "b1", "  ", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+// ["  ", "  ", "  ", "  ", "p0", "  ", "  ", "  "],
+// ["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
+// ["r0", "n0", "b0", "q0", "k0", "  ", "n0", "r0"]];
+// for(var i = 0; i<moves.length;i++)
+// {
+//     if(printDebug[2])
+//     {
+//         board.printBoard(board.board);
+//         console.log(" ")
+//     }
+//     startX = moves[i][0];
+//     startY = moves[i][1];
+//     endX = moves[i][2];
+//     endY = moves[i][3];
+//     board.movePiece(startX,startY,endX,endY);
+// }
+// if(printDebug[2])
+// {
+//     board.printBoard(board.board);
+//     console.log(" ")
+// }
+// console.log("L\u00E4ufer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
 
 //Schach Unit
 board = new Board();
-testBoard = [["r1", "n1", "b1", "q1", "  ", "b1", "n1", "r1"],
-["p1", "p1", "p1", "  ", "k1", "p1", "p1", "p1"],
-["  ", "  ", "  ", "p1", "  ", "  ", "  ", "  "],
-["  ", "b0", "  ", "  ", "p1", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "p0", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "n0", "  ", "  "],
+testBoard = [["r1", "  ", "b1", "q1", "k1", "b1", "  ", "r1"],
+["p1", "p1", "p1", "p1", "  ", "q0", "p1", "p1"],
+["  ", "  ", "n1", "  ", "  ", "n1", "  ", "  "],
+["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
+["  ", "  ", "b0", "  ", "p0", "  ", "  ", "  "],
+["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
 ["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
-["r0", "n0", "b0", "q0", "k0", "  ", "  ", "r0"]]
-moves = [[6,4,4,4],[1,4,3,4],[7,3,3,7],[0,1,2,2],[7,5,4,2,],[0,6,2,5],[3,7,1,5]];
-var moveAcceptionExpected = [true,true,true,true,true,false,true];
+["r0", "n0", "b0", "  ", "k0", "  ", "n0", "r0"]
+]
+moves = [[6, 4, 4, 4], [1, 6, 2, 6], [6, 3, 4, 3], [0, 5, 1, 6], [7, 1, 5, 2], [1, 3, 2, 3], [6, 5, 4, 5], [1, 2, 3, 2], [4, 3, 3, 2], [0, 3, 3, 0], [3, 2, 2, 3], [1, 6, 5, 2], [6, 1, 5, 2], [3, 0, 5, 2], [7, 2, 6, 3], [5, 2, 4, 3], [7, 5, 5, 3], [4, 3, 2, 3], [6, 3, 5, 2], [1, 5, 2, 5], [7, 6, 5, 5], [0, 1, 2, 2], [5, 2, 6, 3], [2, 3, 3, 2], [7, 3, 6, 4], [0, 6, 2, 7], [6, 7, 5, 7], [0, 4, 0, 6], [6, 3, 5, 4], [3, 2, 5, 2], [7, 4, 6, 5], [2, 7, 1, 5], [7, 7, 7, 3], [1, 4, 3, 4], [5, 3, 4, 2], [5, 2, 3, 0], [6, 5, 7, 6], [0, 6, 1, 6], [7, 0, 7, 1], [3, 0, 1, 2], [5, 4, 3, 2], [0, 5, 0, 4], [4, 2, 1, 5], [1, 2, 1, 5], [4, 5, 3, 4], [2, 5, 3, 4], [5, 5, 3, 6], [1, 5, 6, 0], [6, 4, 6, 5], [2, 2, 0, 3], [7, 3, 7, 5], [6, 0, 2, 0], [3, 2, 1, 4], [0, 2, 2, 4], [6, 5, 2, 5], [1, 6, 0, 6], [1, 4, 0, 5], [2, 0, 7, 5], [7, 1, 7, 5]];
+var moveAcceptionExpected = [true,true,true,true,true,true,true];
 var moveAcception = [];
+console.log("Start");
 for(var i = 0; i<moves.length;i++)
 {
     if(printDebug[3])
     {
-        // board.printBoard(board.board);
+        console.log(i);
+        board.printBoard(board.board);
         console.log(" ");
     }
     startX = moves[i][0];
     startY = moves[i][1];
     endX = moves[i][2];
     endY = moves[i][3];
-    moveAcception.push(board.movePiece(startX,startY,endX,endY));
+    var acception = board.movePiece(startX,startY,endX,endY);
+    if(!acception)
+    {
+        console.log(moves[i]);
+        console.log(board.isMovePosible(startX,startY,endX,endY));
+        console.log(board.simulateMove(startX,startY,endX,endY));
+        break;
+    }
+    moveAcception.push(acception);
 }
 
 if(printDebug[3])
 {
+    console.log(i);
     board.printBoard(board.board);
+    console.log(" ");
 }
-console.log("Schachmatt Unit Test: " + String(board.isCheckMate()));
-console.log("Schach Unit Test Feldgleichheit: " + String(fieldEquals(board.board,testBoard)));
-console.log("Schach Unit Test Angenommene Z\u00FCge: " + String(equals(moveAcception,moveAcceptionExpected)));
+console.log("Schachmatt Unit Test: " + (board.isCheckMate() ? "PASSED" : "FAILED"));
+console.log("Schach Unit Test Feldgleichheit: " +  (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
+console.log("Schach Unit Test Angenommene Z\u00FCge: " + (equals(moveAcception,moveAcceptionExpected) ? "PASSED" : "FAILED"));
 
 
 
