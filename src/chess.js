@@ -78,6 +78,10 @@ export default class Board {
             this.isWhiteCheck = this.isCheck(WHITE, this.board);
             this.isBlackCheck = this.isCheck(BLACK, this.board);
             this.current_color = this.current_color === WHITE ? BLACK : WHITE;
+            if(this.isCheckMate())
+            {
+                this.checkMate = true;
+            }
 
             return true;
         }
@@ -114,6 +118,7 @@ export default class Board {
                 return (this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             case "k":
             var canMove = (this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
+            console.log(this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             if(canMove)
             {
                 this.castlePossible[this.current_color] = [false,false];
@@ -177,6 +182,10 @@ export default class Board {
             {
                 return true;
             }
+            else if(row[i] != EMPTY)
+            {
+                break;
+            }
             
         }
         //Linksseitig vom König in der Zeile
@@ -189,6 +198,10 @@ export default class Board {
             else if(row[i].slice(0,1) === "q" || row[i].slice(0,1) === "r")
             {
                 return true;
+            }
+            else if(row[i] != EMPTY)
+            {
+                break;
             }
             
         }
@@ -206,6 +219,10 @@ export default class Board {
             {
                 return true;
             }
+            else if(column[i] != EMPTY)
+            {
+                break;
+            }
             
         }
         //Oberhalb vom König in der Spalte
@@ -218,6 +235,10 @@ export default class Board {
             else if(column[i].slice(0,1) === "q" || column[i].slice(0,1) === "r")
             {
                 return true;
+            }
+            else if(column[i] != EMPTY)
+            {
+                break;
             }
             
         }
@@ -241,6 +262,10 @@ export default class Board {
             {
                 return true;
             }
+            else if(diagonals[0][i] != EMPTY)
+            {
+                break;
+            }
             
             counter++;
         }
@@ -260,6 +285,10 @@ export default class Board {
             {
                 return true;
             }
+            else if(diagonals[0][i] != EMPTY)
+            {
+                break;
+            }
             
             counter++;
         }
@@ -277,11 +306,14 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === BLACK)
             {
                 return true;
             }
-            
+            else if(diagonals[1][i] != EMPTY)
+            {
+                break;
+            }
             counter++;
         }
         //Oberhalb des Köngis
@@ -296,9 +328,13 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === WHITE)
             {
                 return true;
+            }
+            else if(diagonals[1][i] != EMPTY)
+            {
+                break;
             }
             
             counter++;
@@ -517,6 +553,10 @@ export default class Board {
     
     isKingMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
+        if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) == this.current_color)
+        {
+            return false;
+        }
         //Entweder er läuft 1 Feld oder rochiert
         var rowDifference = Math.abs(destinationRow-startRow);
         var colDifference = Math.abs(destinationCol-startCol);
@@ -582,6 +622,10 @@ export default class Board {
     
     isRookMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
+        if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) == this.current_color)
+        {
+            return false;
+        }
         
         if(startRow === destinationRow)
         {
@@ -618,6 +662,10 @@ export default class Board {
     isBishopMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
         if(Math.abs(startRow-destinationRow) !== Math.abs(startCol-destinationCol))
+        {
+            return false;
+        }
+        if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) == this.current_color)
         {
             return false;
         }

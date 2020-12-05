@@ -13,9 +13,19 @@ body {
   height: 80%;
 }
 
+
 .black
 {
   background-color: burlywood;
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.selected
+{
+  background-color: green;
   display: inline-block;
   width: 100px;
   height: 100px;
