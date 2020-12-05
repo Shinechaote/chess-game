@@ -2,7 +2,7 @@ let EMPTY = "  ";
 let WHITE = 0;
 let BLACK = 1;
 
-class Board {
+export default class Board {
     constructor()
     {
         this.board = this.create_board();
@@ -47,7 +47,7 @@ class Board {
     
     movePiece(startRow, startCol, destinationRow, destinationCol)
     {
-        if(this.checkMate == true)
+        if(this.checkMate === true)
         {
             return false;
         }
@@ -60,8 +60,8 @@ class Board {
             if(this.castling)
             {
                 var rookRow = startRow;
-                var rookCol = destinationCol == 6 ? 7 : 0;
-                var castleCol = rookCol == 7 ? 5 : 3;
+                var rookCol = destinationCol === 6 ? 7 : 0;
+                var castleCol = rookCol === 7 ? 5 : 3;
                 this.board[rookRow][castleCol] = this.board[rookRow][rookCol]
                 this.board[rookRow][rookCol] = EMPTY;
                 this.castling = false;
@@ -77,7 +77,7 @@ class Board {
             }
             this.isWhiteCheck = this.isCheck(WHITE, this.board);
             this.isBlackCheck = this.isCheck(BLACK, this.board);
-            this.current_color = this.current_color == WHITE ? BLACK : WHITE;
+            this.current_color = this.current_color === WHITE ? BLACK : WHITE;
 
             return true;
         }
@@ -104,7 +104,7 @@ class Board {
         {
             return false;
         }
-        if(destinationRow == startRow && destinationCol == startCol)
+        if(destinationRow === startRow && destinationCol === startCol)
         {
             return false;
         }
@@ -122,22 +122,18 @@ class Board {
             case "q":
             return (this.isQueenMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             
-            break;
             case "r":
             return (this.isRookMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             
-            break;
             case "n":
             return (this.isKnightMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             case "b":
             return (this.isBishopMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
-            break;
             default:
             
             console.log("Default Case bei Move Possible");
             return false;
         }
-        return false;
     }
     
     isCheck(color, board)
@@ -157,13 +153,13 @@ class Board {
         //Findet den König der Farbe
         for(var i = 0; i<64;i++)
         {
-            if(board[Math.floor(i/8)][i%8] == "k" + String(color))
+            if(board[Math.floor(i/8)][i%8] === "k" + String(color))
             {
                 kingX = i%8;
                 kingY = Math.floor(i/8);
             }
         }
-        if(kingX == -1 || kingY == -1)
+        if(kingX === -1 || kingY === -1)
         {
             return true;
         }
@@ -173,11 +169,11 @@ class Board {
         //Rechtsseitig vom König in der Zeile
         for(var i = kingX+1; i<8;i++)
         {
-            if(parseInt(row[i].slice(1,2)) == color)
+            if(parseInt(row[i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(row[i].slice(0,1) == "q" || row[i].slice(0,1) == "r")
+            else if(row[i].slice(0,1) === "q" || row[i].slice(0,1) === "r")
             {
                 return true;
             }
@@ -186,11 +182,11 @@ class Board {
         //Linksseitig vom König in der Zeile
         for(var i = kingX-1; i>=0;i--)
         {
-            if(parseInt(row[i].slice(1,2)) == color)
+            if(parseInt(row[i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(row[i].slice(0,1) == "q" || row[i].slice(0,1) == "r")
+            else if(row[i].slice(0,1) === "q" || row[i].slice(0,1) === "r")
             {
                 return true;
             }
@@ -202,11 +198,11 @@ class Board {
         var column = this.arrayColumn(board,kingX)
         for(var i = kingY+1; i<8;i++)
         {
-            if(parseInt(column[i].slice(1,2)) == color)
+            if(parseInt(column[i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(column[i].slice(0,1) == "q" || column[i].slice(0,1) == "r")
+            else if(column[i].slice(0,1) === "q" || column[i].slice(0,1) === "r")
             {
                 return true;
             }
@@ -215,11 +211,11 @@ class Board {
         //Oberhalb vom König in der Spalte
         for(var i = kingY-1; i>=0;i--)
         {
-            if(parseInt(column[i].slice(1,2)) == color)
+            if(parseInt(column[i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(column[i].slice(0,1) == "q" || column[i].slice(0,1) == "r")
+            else if(column[i].slice(0,1) === "q" || column[i].slice(0,1) === "r")
             {
                 return true;
             }
@@ -233,15 +229,15 @@ class Board {
         var counter = 1;
         for(var i = Math.min(kingX,kingY)+1; i < diagonals[0].length;i++)
         {
-            if(parseInt(diagonals[0][i].slice(1,2)) == color)
+            if(parseInt(diagonals[0][i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(diagonals[0][i].slice(0,1) == "q" || diagonals[0][i].slice(0,1) == "b")
+            else if(diagonals[0][i].slice(0,1) === "q" || diagonals[0][i].slice(0,1) === "b")
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) == "p" && counter == 1 && color == WHITE)
+            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
             {
                 return true;
             }
@@ -252,15 +248,15 @@ class Board {
         counter = 1;
         for(var i = Math.min(kingX,kingY)-1; i >= 0;i--)
         {
-            if(parseInt(diagonals[0][i].slice(1,2)) == color)
+            if(parseInt(diagonals[0][i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(diagonals[0][i].slice(0,1) == "q" || diagonals[0][i].slice(0,1) == "b")
+            else if(diagonals[0][i].slice(0,1) === "q" || diagonals[0][i].slice(0,1) === "b")
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) == "p" && counter == 1  && color == BLACK)
+            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
             {
                 return true;
             }
@@ -273,15 +269,15 @@ class Board {
         
         for(var i = Math.min(7-kingX,kingY)+1; i < diagonals[1].length;i++)
         {
-            if(parseInt(diagonals[1][i].slice(1,2)) == color)
+            if(parseInt(diagonals[1][i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(diagonals[1][i].slice(0,1) == "q" || diagonals[1][i].slice(0,1) == "b")
+            else if(diagonals[1][i].slice(0,1) === "q" || diagonals[1][i].slice(0,1) === "b")
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) == "p" && counter == 1 && color == WHITE)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
             {
                 return true;
             }
@@ -292,15 +288,15 @@ class Board {
         counter = 1;
         for(var i = Math.min(7-kingX,kingY)-1; i >= 0;i--)
         {
-            if(parseInt(diagonals[1][i].slice(1,2)) == color)
+            if(parseInt(diagonals[1][i].slice(1,2)) === color)
             {
                 break;
             }
-            else if(diagonals[1][i].slice(0,1) == "q" || diagonals[1][i].slice(0,1) == "b")
+            else if(diagonals[1][i].slice(0,1) === "q" || diagonals[1][i].slice(0,1) === "b")
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) == "p" && counter == 1  && color == BLACK)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
             {
                 return true;
             }
@@ -315,7 +311,7 @@ class Board {
             var jumpX = knightMoves[i][0] + kingX;
             var jumpY = knightMoves[i][1] + kingY;
             
-            if(board[jumpY][jumpX].slice(0,1) == "n" && parseInt(board[jumpY][jumpX].slice(1,2)) != color)
+            if(board[jumpY][jumpX].slice(0,1) === "n" && parseInt(board[jumpY][jumpX].slice(1,2)) !== color)
             {
                 return true;
             }
@@ -333,13 +329,13 @@ class Board {
         {
             for(var j =0;j<8;j++)
             {
-                if(parseInt(this.board[i][j].slice(1,2)) == this.current_color)
+                if(parseInt(this.board[i][j].slice(1,2)) === this.current_color)
                 {
                     switch(this.board[i][j].slice(0,1))
                     {
                         case "p":
                         //Kann ein Bauer das Matt abwehren
-                        moves = [[colorShift,0],[colorShift*2,0],[colorShift,-1],[colorShift,1]]
+                        var moves = [[colorShift,0],[colorShift*2,0],[colorShift,-1],[colorShift,1]]
                         for(var k = 0; k<moves.length; k++)
                         {
                             if(this.isMovePosible(i,j,i+moves[k][0],j+moves[k][1]))
@@ -443,8 +439,8 @@ class Board {
         }
         diagonals.push(firstDiagonal);
         //Rechts oben nach Links unten
-        var curX = x +  Math.min(7-x,y);
-        var curY = y -  Math.min(7-x,y);
+        curX = x +  Math.min(7-x,y);
+        curY = y -  Math.min(7-x,y);
         var secondDiagonal = [];
         while(curX >= 0 && curY < 8)
         {
@@ -469,22 +465,22 @@ class Board {
         // colorShift ist dafür da um eine Reihe weiter zu gehen aus Sicht der jeweiligen Farbe also für weiß(=0) -1 und schwarz(1) +1
         var colorShiftRow = (-1)**(this.current_color+1)
         //Überprüft ob der ausgewählte Bauer die zu spielende Farbe hat und in die richtige Richtung will
-        if(parseInt(this.board[startRow][startCol].slice(1,2)) != this.current_color || Math.abs(destinationRow-startRow) != (destinationRow-startRow)*colorShiftRow )
+        if(parseInt(this.board[startRow][startCol].slice(1,2)) !== this.current_color || Math.abs(destinationRow-startRow) !== (destinationRow-startRow)*colorShiftRow )
         {
             return false;
         }
-        if(startCol == destinationCol)
+        if(startCol === destinationCol)
         {
             var distanceForward = Math.abs(startRow-destinationRow);
             //Läuft ein Feld
-            if(this.board[destinationRow][destinationCol] == EMPTY && distanceForward == 1)
+            if(this.board[destinationRow][destinationCol] === EMPTY && distanceForward === 1)
             {
                 return true;
             }
             //Läuft 2 Felder
-            if(startRow == 6-this.current_color*5 && distanceForward == 2)
+            if(startRow === 6-this.current_color*5 && distanceForward === 2)
             {
-                if(this.board[destinationRow][destinationCol] == EMPTY && this.board[destinationRow-colorShiftRow][destinationCol] == EMPTY)
+                if(this.board[destinationRow][destinationCol] === EMPTY && this.board[destinationRow-colorShiftRow][destinationCol] === EMPTY)
                 {
                     return true;
                 }
@@ -493,21 +489,21 @@ class Board {
         else
         {
             //Bauer schlägt und soll maximal 1 Feld laufen können
-            if(Math.abs(startRow-destinationRow) == 1 && Math.abs(startCol-destinationCol) == 1)
+            if(Math.abs(startRow-destinationRow) === 1 && Math.abs(startCol-destinationCol) === 1)
             {
-                if(parseInt(this.board[destinationRow][destinationCol][1]) != this.current_color && this.board[destinationRow][destinationCol] != EMPTY )
+                if(parseInt(this.board[destinationRow][destinationCol][1]) !== this.current_color && this.board[destinationRow][destinationCol] !== EMPTY )
                 {
                     return true;
                 }
                 //Überprüft en passant
                 //Ist das Zielfeld leer und es entweder Reihe 2 oder 6
-                if(this.board[destinationRow][destinationCol] == EMPTY && destinationRow == 6-(1-this.current_color)*4)
+                if(this.board[destinationRow][destinationCol] === EMPTY && destinationRow === 6-(1-this.current_color)*4)
                 {
                     //Ist ein En Passant Bauer direkt neben dem Bauern
-                    if(this.board[destinationRow-colorShiftRow][destinationCol] != EMPTY && parseInt(this.board[destinationRow-colorShiftRow][destinationCol][1]) != this.current_color )
+                    if(this.board[destinationRow-colorShiftRow][destinationCol] !== EMPTY && parseInt(this.board[destinationRow-colorShiftRow][destinationCol][1]) !== this.current_color )
                     {
                         //Ist der Bauer neben einem im letzten Zug gesprungen
-                        if(this.lastBoard[destinationRow+colorShiftRow][destinationCol] == "p" + String(1-this.current_color))
+                        if(this.lastBoard[destinationRow+colorShiftRow][destinationCol] === "p" + String(1-this.current_color))
                         {
                             this.enPassant = true;
                             return true;
@@ -531,14 +527,14 @@ class Board {
         
         if(colDifference <= 1)
         {
-            if(this.board[destinationRow][destinationCol] == EMPTY || parseInt(this.board[destinationRow][destinationCol].slice(1,2)) != this.current_color )
+            if(this.board[destinationRow][destinationCol] === EMPTY || parseInt(this.board[destinationRow][destinationCol].slice(1,2)) !== this.current_color )
             {
                 
                 return true;
             }
         }
         //Lange oder kurze Rochade überprüfen
-        var shortCastle = (colDifference == destinationCol-startCol);
+        var shortCastle = (colDifference === destinationCol-startCol);
         if(this.castlePossible[this.current_color][shortCastle ? 1 : 0])
         {
             if(shortCastle)
@@ -546,7 +542,7 @@ class Board {
 
                 for(var i = 1;i<3;i++)
                 {
-                    if(this.board[destinationRow][startCol+i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol+i))
+                    if(this.board[destinationRow][startCol+i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol+i))
                     {
                         console.log(i)
                         console.log(this.board[destinationRow][startCol+i]);
@@ -559,7 +555,7 @@ class Board {
             }
             for(var i = 1;i<4;i++)
             {
-                if(this.board[destinationRow][startCol-i] != EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol-i))
+                if(this.board[destinationRow][startCol-i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol-i))
                 {
                     return false;
                 }
@@ -574,7 +570,7 @@ class Board {
     
     isQueenMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
-        if(startRow == destinationRow || startCol == destinationCol)
+        if(startRow === destinationRow || startCol === destinationCol)
         {
             return this.isRookMovePossible(startRow, startCol, destinationRow, destinationCol);
         }
@@ -587,28 +583,28 @@ class Board {
     isRookMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
         
-        if(startRow == destinationRow)
+        if(startRow === destinationRow)
         {
             var row = this.board[startRow];
             var startX = Math.min(startCol,destinationCol);
             var endX = Math.min(startCol,destinationCol);
             for(var i = startX; i < endX; i++)
             {
-                if(row[i] != EMPTY)
+                if(row[i] !== EMPTY)
                 {
                     return false;
                 }
             }
             return true;
         }
-        if(startCol == destinationCol)
+        if(startCol === destinationCol)
         {
             var column = this.arrayColumn(this.board, startCol);
             var startY = Math.min(startRow,destinationRow);
             var endY = Math.min(startRow,destinationRow);
             for(var i = startY; i < endY; i++)
             {
-                if(column[i] != EMPTY)
+                if(column[i] !== EMPTY)
                 {
                     return false;
                 }
@@ -621,13 +617,12 @@ class Board {
     
     isBishopMovePossible(startRow, startCol, destinationRow, destinationCol)
     {
-        var diagonals = this.getDiagonals(startRow,startCol, this.board);
-        if(Math.abs(startRow-destinationRow) != Math.abs(startCol-destinationCol))
+        if(Math.abs(startRow-destinationRow) !== Math.abs(startCol-destinationCol))
         {
             return false;
         }
         //Überprüft ob der obere Punkt weiter links ist als der unterste Punkt und damit ob die Diagonale von links nach rechts verläuft
-        if([startCol,destinationCol][[destinationRow,startRow].indexOf(Math.min.apply(Math, [startRow,destinationRow]))] == Math.max(startCol,destinationCol) )
+        if([startCol,destinationCol][[destinationRow,startRow].indexOf(Math.min.apply(Math, [startRow,destinationRow]))] === Math.max(startCol,destinationCol) )
         {
             //Von Links oben nach Rechts unten
             var startX = Math.min(startCol,destinationCol);
@@ -635,7 +630,7 @@ class Board {
             var distance = Math.abs(startRow-destinationRow);
             for(var i = 1; i<distance;i++)
             {
-                if(this.board[startY+i][startX+i] != EMPTY)
+                if(this.board[startY+i][startX+i] !== EMPTY)
                 {
                     return false;
                 }
@@ -644,12 +639,12 @@ class Board {
         else
         {
             //Von Rechts oben nach Links unten
-            var startX = Math.min(7-startCol,7-destinationCol);
-            var startY = Math.min(startRow,destinationRow);
-            var distance = Math.abs(startRow-destinationRow);
+            startX = Math.min(7-startCol,7-destinationCol);
+            startY = Math.min(startRow,destinationRow);
+            distance = Math.abs(startRow-destinationRow);
             for(var i = 1; i < distance ;i++)
             {
-                if(this.board[startY+i][7-startX-i] != EMPTY)
+                if(this.board[startY+i][7-startX-i] !== EMPTY)
                 {
                     
                     return false;
@@ -669,9 +664,9 @@ class Board {
         var colDifference = destinationCol-startCol;
         for(var i = 0; i<knightMoves.length;i++)
         {   
-            if(rowDifference == knightMoves[i][0] && colDifference == knightMoves[i][1])
+            if(rowDifference === knightMoves[i][0] && colDifference === knightMoves[i][1])
             {
-                if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) != this.current_color)
+                if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) !== this.current_color)
                 {
                     return true;
                 }
@@ -680,181 +675,3 @@ class Board {
         return false;
     }
 }
-
-function fieldEquals(arr,arr2)
-{
-    for(var i = 0;i<arr.length;i++)
-    {
-        for(var j = 0; j < arr[i].length;j++)
-        {
-            if(arr[i][j] != arr2[i][j])
-            {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-function equals(arr,arr2)
-{
-    for(var i = 0; i<arr.length;i++)
-    {
-        if(arr[i] != arr2[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-var board = new Board();
-var printDebug = [false,false,false,true];
-var testBoard = [["r1", "n1", "b1", "q1", "k1", "b1", "n1", "r1"],
-["p1", "p1", "p1", "  ", "  ", "  ", "p1", "p1"],
-["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["p0", "p0", "  ", "p0", "p0", "p0", "p0", "p0"],
-["r0", "n0", "b0", "q0", "k0", "b0", "n0", "r0"]]
-var moves = [[6,2,4,2],[1,3,3,3],[4,2,3,3],[1,4,3,4],[3,3,2,4],[1,5,2,4]]
-
-//Unit Tests
-
-//Bauer Unit
-// for(var i = 0; i<moves.length;i++)
-// {
-//     if(printDebug[0])
-//     {
-//         board.printBoard(board.board);
-//         console.log(" ")
-//     }
-//     startX = moves[i][0];
-//     startY = moves[i][1];
-//     endX = moves[i][2];
-//     endY = moves[i][3];
-//     board.movePiece(startX,startY,endX,endY);
-// }
-// if(printDebug[0])
-// {
-//     board.printBoard(board.board);
-//     console.log(" ")
-// }
-// console.log("Checkmate Bauer: " + (board.isCheckMate() ? "FAILED" : "PASSED"));
-// console.log("Bauer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
-
-
-// //Springer Unit
-// board = new Board();
-// moves = [[7,1,5,2],[1,3,3,3],[5,2,3,3],[1,0,2,0],[3,3,1,2]]
-// testBoard = [["r1", "n1", "b1", "q1", "k1", "b1", "n1", "r1"],
-// ["  ", "p1", "n0", "  ", "p1", "p1", "p1", "p1"],
-// ["p1", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-// ["p0", "p0", "p0", "p0", "p0", "p0", "p0", "p0"],
-// ["r0", "  ", "b0", "q0", "k0", "b0", "n0", "r0"]]
-// for(var i = 0; i<moves.length;i++)
-// {
-//     if(printDebug[1])
-//     {
-//         board.printBoard(board.board);
-//         console.log(" ")
-//     }
-//     startX = moves[i][0];
-//     startY = moves[i][1];
-//     endX = moves[i][2];
-//     endY = moves[i][3];
-//     board.movePiece(startX,startY,endX,endY);
-// }
-// if(printDebug[1])
-// {
-//     board.printBoard(board.board);
-//     console.log(" ")
-// }
-// console.log("Springer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
-
-// // Läufer Unit
-// board = new Board();
-// moves = [[6,4,5,4],[1,4,3,4],[7,5,3,1],[0,5,4,1],[3,1,2,2],[4,1,5,0],[2,2,5,5],[5,0,2,3],[5,5,2,2]]
-// testBoard = [["r1", "n1", "b1", "q1", "k1", "  ", "n1", "r1"],
-// ["p1", "p1", "p1", "p1", "  ", "p1", "p1", "p1"],
-// ["  ", "  ", "b0", "b1", "  ", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-// ["  ", "  ", "  ", "  ", "p0", "  ", "  ", "  "],
-// ["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
-// ["r0", "n0", "b0", "q0", "k0", "  ", "n0", "r0"]];
-// for(var i = 0; i<moves.length;i++)
-// {
-//     if(printDebug[2])
-//     {
-//         board.printBoard(board.board);
-//         console.log(" ")
-//     }
-//     startX = moves[i][0];
-//     startY = moves[i][1];
-//     endX = moves[i][2];
-//     endY = moves[i][3];
-//     board.movePiece(startX,startY,endX,endY);
-// }
-// if(printDebug[2])
-// {
-//     board.printBoard(board.board);
-//     console.log(" ")
-// }
-// console.log("L\u00E4ufer Unit Test: " + (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
-
-//Schach Unit
-board = new Board();
-testBoard = [["r1", "  ", "b1", "q1", "k1", "b1", "  ", "r1"],
-["p1", "p1", "p1", "p1", "  ", "q0", "p1", "p1"],
-["  ", "  ", "n1", "  ", "  ", "n1", "  ", "  "],
-["  ", "  ", "  ", "  ", "p1", "  ", "  ", "  "],
-["  ", "  ", "b0", "  ", "p0", "  ", "  ", "  "],
-["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-["p0", "p0", "p0", "p0", "  ", "p0", "p0", "p0"],
-["r0", "n0", "b0", "  ", "k0", "  ", "n0", "r0"]
-]
-moves = [[6, 4, 4, 4], [1, 6, 2, 6], [6, 3, 4, 3], [0, 5, 1, 6], [7, 1, 5, 2], [1, 3, 2, 3], [6, 5, 4, 5], [1, 2, 3, 2], [4, 3, 3, 2], [0, 3, 3, 0], [3, 2, 2, 3], [1, 6, 5, 2], [6, 1, 5, 2], [3, 0, 5, 2], [7, 2, 6, 3], [5, 2, 4, 3], [7, 5, 5, 3], [4, 3, 2, 3], [6, 3, 5, 2], [1, 5, 2, 5], [7, 6, 5, 5], [0, 1, 2, 2], [5, 2, 6, 3], [2, 3, 3, 2], [7, 3, 6, 4], [0, 6, 2, 7], [6, 7, 5, 7], [0, 4, 0, 6], [6, 3, 5, 4], [3, 2, 5, 2], [7, 4, 6, 5], [2, 7, 1, 5], [7, 7, 7, 3], [1, 4, 3, 4], [5, 3, 4, 2], [5, 2, 3, 0], [6, 5, 7, 6], [0, 6, 1, 6], [7, 0, 7, 1], [3, 0, 1, 2], [5, 4, 3, 2], [0, 5, 0, 4], [4, 2, 1, 5], [1, 2, 1, 5], [4, 5, 3, 4], [2, 5, 3, 4], [5, 5, 3, 6], [1, 5, 6, 0], [6, 4, 6, 5], [2, 2, 0, 3], [7, 3, 7, 5], [6, 0, 2, 0], [3, 2, 1, 4], [0, 2, 2, 4], [6, 5, 2, 5], [1, 6, 0, 6], [1, 4, 0, 5], [2, 0, 7, 5], [7, 1, 7, 5]];
-var moveAcceptionExpected = [true,true,true,true,true,true,true];
-var moveAcception = [];
-console.log("Start");
-for(var i = 0; i<moves.length;i++)
-{
-    if(printDebug[3])
-    {
-        console.log(i);
-        board.printBoard(board.board);
-        console.log(" ");
-    }
-    startX = moves[i][0];
-    startY = moves[i][1];
-    endX = moves[i][2];
-    endY = moves[i][3];
-    var acception = board.movePiece(startX,startY,endX,endY);
-    if(!acception)
-    {
-        console.log(moves[i]);
-        console.log(board.isMovePosible(startX,startY,endX,endY));
-        console.log(board.simulateMove(startX,startY,endX,endY));
-        break;
-    }
-    moveAcception.push(acception);
-}
-
-if(printDebug[3])
-{
-    console.log(i);
-    board.printBoard(board.board);
-    console.log(" ");
-}
-console.log("Schachmatt Unit Test: " + (board.isCheckMate() ? "PASSED" : "FAILED"));
-console.log("Schach Unit Test Feldgleichheit: " +  (fieldEquals(board.board,testBoard) ? "PASSED" : "FAILED"));
-console.log("Schach Unit Test Angenommene Z\u00FCge: " + (equals(moveAcception,moveAcceptionExpected) ? "PASSED" : "FAILED"));
-
-
-
-
