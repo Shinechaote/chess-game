@@ -23,6 +23,31 @@ body {
   position: relative;
 }
 
+.check{
+  display: inline-block;
+  position: relative;
+
+  border-radius: 70%/70%;
+    background: red;
+}
+
+.possible-position{
+
+  max-height: 35%;
+  max-width: 35%;
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  border-radius: 70%/70%;
+    background: green;
+
+}
+
 .selected
 {
   background-color: green;

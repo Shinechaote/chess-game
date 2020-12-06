@@ -18,6 +18,7 @@ export default class Board {
         //Ob man gerade am Rochieren ist
         this.castling = false;
         this.enPassant = false;
+        this.staleMate = false;
         this.checkMate = false;
     }
     
@@ -47,7 +48,7 @@ export default class Board {
     
     movePiece(startRow, startCol, destinationRow, destinationCol)
     {
-        if(this.checkMate === true)
+        if(this.checkMate === true || this.staleMate == true)
         {
             return false;
         }
@@ -59,6 +60,7 @@ export default class Board {
             //Workaround damit man rochieren kann
             if(this.castling)
             {
+                this.castlePossible[this.current_color] = [false,false];
                 var rookRow = startRow;
                 var rookCol = destinationCol === 6 ? 7 : 0;
                 var castleCol = rookCol === 7 ? 5 : 3;
@@ -82,7 +84,7 @@ export default class Board {
             {
                 this.checkMate = true;
             }
-
+            
             return true;
         }
         return false;
@@ -115,14 +117,10 @@ export default class Board {
         switch(this.board[startRow][startCol].slice(0,1))
         {
             case "p":
-                return (this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
+            return (this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             case "k":
             var canMove = (this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
             console.log(this.simulateMove(startRow,startCol,destinationRow,destinationCol));
-            if(canMove)
-            {
-                this.castlePossible[this.current_color] = [false,false];
-            }
             return canMove;
             case "q":
             return (this.isQueenMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol));
@@ -141,6 +139,21 @@ export default class Board {
         }
     }
     
+    getKingPosition(color,board)
+    {
+        var kingX = -1;
+        var kingY = -1;
+        for(var i = 0; i<64;i++)
+        {
+            if(board[Math.floor(i/8)][i%8] === "k" + String(color))
+            {
+                kingX = i%8;
+                kingY = Math.floor(i/8);
+            }
+        }
+        return [kingX,kingY]
+    }
+    
     isCheck(color, board)
     {
         /*
@@ -156,14 +169,7 @@ export default class Board {
         var kingX = -1;
         var kingY = -1;
         //Findet den König der Farbe
-        for(var i = 0; i<64;i++)
-        {
-            if(board[Math.floor(i/8)][i%8] === "k" + String(color))
-            {
-                kingX = i%8;
-                kingY = Math.floor(i/8);
-            }
-        }
+        [kingX,kingY] = this.getKingPosition(color,board);
         if(kingX === -1 || kingY === -1)
         {
             return true;
@@ -367,73 +373,9 @@ export default class Board {
             {
                 if(parseInt(this.board[i][j].slice(1,2)) === this.current_color)
                 {
-                    switch(this.board[i][j].slice(0,1))
+                    if(this.getPossibleMoves(j,i).length != 0)
                     {
-                        case "p":
-                        //Kann ein Bauer das Matt abwehren
-                        var moves = [[colorShift,0],[colorShift*2,0],[colorShift,-1],[colorShift,1]]
-                        for(var k = 0; k<moves.length; k++)
-                        {
-                            if(this.isMovePosible(i,j,i+moves[k][0],j+moves[k][1]))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        case "k":
-                        moves = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 0], [0, 1], [1, -1], [1, 0], [1, 1]]
-                        for(var k = 0; k<moves.length; k++)
-                        {
-                            if(this.isMovePosible(i,j,i+moves[k][0],j+moves[k][1]))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        case "q":
-                        for(var k = 1; k<8;k++)
-                        {
-                            if(this.isMovePosible(i,j,i+k,j) || this.isMovePosible(i,j,i-k,j) || this.isMovePosible(i,j,i,j+k) || this.isMovePosible(i,j,i,j-k))
-                            {
-                                return false;
-                            }
-                            if(this.isMovePosible(i,j,i+k,j+k) || this.isMovePosible(i,j,i+k,j-k) || this.isMovePosible(i,j,i-k,j+k) || this.isMovePosible(i,j,i-k,j-k))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        case "r":
-                        for(var k = 1; k<8;k++)
-                        {
-                            if(this.isMovePosible(i,j,i+k,j) || this.isMovePosible(i,j,i-k,j) || this.isMovePosible(i,j,i,j+k) || this.isMovePosible(i,j,i,j-k))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        case "n":
-                        moves = this.getInboundKnightMoves(i,j);
-                        for(var k = 0; k<moves.length ; k++)
-                        {
-                            if(this.isMovePosible(i,j,i+moves[k][0],j+moves[k][1]))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        case "b":
-                        for(var k = 0; k<8;k++)
-                        {
-                            if(this.isMovePosible(i,j,i+k,j+k) || this.isMovePosible(i,j,i+k,j-k) || this.isMovePosible(i,j,i-k,j+k) || this.isMovePosible(i,j,i-k,j-k))
-                            {
-                                return false;
-                            }
-                        }
-                        break;
-                        default:
-                        console.log("Fehler bei Switch für checkmate");
-                        return true;
+                        return false;
                     }
                 }           
             }
@@ -441,7 +383,11 @@ export default class Board {
             
         }
         
-        
+        if(!this.isCheck(this.current_color,this.board))
+        {
+            this.staleMate = true;
+            return false;
+        }
         
         return true;
     }
@@ -579,7 +525,7 @@ export default class Board {
         {
             if(shortCastle)
             {
-
+                
                 for(var i = 1;i<3;i++)
                 {
                     if(this.board[destinationRow][startCol+i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol+i))
@@ -631,7 +577,7 @@ export default class Board {
         {
             var row = this.board[startRow];
             var startX = Math.min(startCol,destinationCol);
-            var endX = Math.min(startCol,destinationCol);
+            var endX = Math.max(startCol,destinationCol);
             for(var i = startX; i < endX; i++)
             {
                 if(row[i] !== EMPTY)
@@ -645,7 +591,7 @@ export default class Board {
         {
             var column = this.arrayColumn(this.board, startCol);
             var startY = Math.min(startRow,destinationRow);
-            var endY = Math.min(startRow,destinationRow);
+            var endY = Math.max(startRow,destinationRow);
             for(var i = startY; i < endY; i++)
             {
                 if(column[i] !== EMPTY)
@@ -722,4 +668,120 @@ export default class Board {
         }
         return false;
     }
+    
+    getPossibleMoves(startX, startY)
+    {
+        var colorShift = (-1)**(this.current_color+1)
+        var piece = this.board[startY][startX].slice(0,1);
+        var possibleMoves = []
+        
+        switch(piece)
+        {
+            case "p":
+            var moves = [[colorShift,0],[colorShift*2,0],[colorShift,-1],[colorShift,1]]
+            for(var k = 0; k<moves.length; k++)
+            {
+                if(this.isMovePosible(startY,startX,startY+moves[k][0],startX+moves[k][1]))
+                {
+                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                }
+            }
+            break;
+            case "k":
+            moves = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 0], [0, 1], [1, -1], [1, 0], [1, 1],[0,-2],[0,2]]
+            for(var k = 0; k<moves.length; k++)
+            {
+                if(this.isMovePosible(startY,startX,startY+moves[k][0],startX+moves[k][1]))
+                {
+                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                }
+            }
+            break;
+            case "q":
+                var rookMoves = this.getRookMoves(startX,startY);
+                var bishopMoves = this.getBishopMoves(startX,startY);
+
+                for(var i = 0;i<rookMoves.length;i++)
+                {
+                    possibleMoves.push(rookMoves[i]);
+                }
+                for(i = 0;i<bishopMoves.length;i++)
+                {
+                    possibleMoves.push(bishopMoves[i]);
+                }
+            
+            break;
+            case "r":
+                possibleMoves = this.getRookMoves(startX,startY);
+            break;
+            case "n":
+            moves = this.getInboundKnightMoves(startY,startX);
+            for(var k = 0; k<moves.length ; k++)
+            {
+                if(this.isMovePosible(startY,startX,startY+moves[k][0],startX+moves[k][1]))
+                {
+                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                }
+            }
+            break;
+            case "b":
+                possibleMoves = this.getBishopMoves(startX,startY);
+            break;
+            default:
+            console.log("Fehler bei Switch für getMoves");
+            return null;
+        }
+        return possibleMoves;
+    }
+
+    getRookMoves(startX,startY)
+    {
+        var possibleMoves = [];
+        for(var k = 1; k<8;k++)
+            {
+                if(this.isMovePosible(startY,startX,startY+k,startX))
+                {
+                    possibleMoves.push([startY+k,startX]);
+                }
+                if(this.isMovePosible(startY,startX,startY-k,startX))
+                {
+                    possibleMoves.push([startY-k,startX]);
+                }
+                if(this.isMovePosible(startY,startX,startY,startX+k))
+                {
+                    possibleMoves.push([startY,startX+k]);
+                }
+                if(this.isMovePosible(startY,startX,startY,startX-k))
+                {
+                    possibleMoves.push([startY,startX-k]);
+                }
+            }
+            return possibleMoves;
+    }
+
+    getBishopMoves(startX,startY)
+    {
+        var possibleMoves = []
+        for(var k = 1; k<8;k++)
+            {
+                if(this.isMovePosible(startY,startX,startY+k,startX+k))
+                {
+                    possibleMoves.push([startY+k,startX+k]);
+                }
+                if(this.isMovePosible(startY,startX,startY+k,startX-k))
+                {
+                    possibleMoves.push([startY+k,startX-k]);
+                }
+                if(this.isMovePosible(startY,startX,startY-k,startX+k))
+                {
+                    possibleMoves.push([startY-k,startX+k]);
+                }
+                if(this.isMovePosible(startY,startX,startY-k,startX-k))
+                {
+                    possibleMoves.push([startY-k,startX-k]);
+                }
+            }
+            return possibleMoves;
+    }
+    
 }
