@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import Board from "./chess.js";
 import './index.css';
 
+let EMPTY = "  ";
 
 
 class App extends React.Component {
@@ -19,119 +20,237 @@ class App extends React.Component {
     }
     
     var pieceBackgroundColors = [];
-    for(var i = 0;i<8;i++)
+    for(i = 0;i<8;i++)
     {
-      for(var j = 0;j<8;j++)
+      for(j = 0;j<8;j++)
       {
         pieceBackgroundColors.push("");
       }
     }
+    var moveHistory = [];
+    
     this.state = {
       "board" : props.board,
-      "movingPiece": false,
+      "selectedPiece": false,
       "startingPiece" : "aa",
       "squareColors" : colors,
       "pieceBackgroundColors" : pieceBackgroundColors,
+      "moveHistory": moveHistory,
+      "moveHistoryIndex" : -1
     };
     this.movePiece = this.movePiece.bind(this);
+    this.revertMove = this.revertMove.bind(this);
+  }
+  componentDidMount () {
+    window.addEventListener('keydown', this.revertMove)
+  }
+  componentWillUnmount () {
+    window.removeEventListener('keydown', this.revertMove)
   }
   
   movePiece(name)
   {
-    if(this.state.movingPiece === true)
+    if(this.state.moveHistoryIndex === this.state.moveHistory.length-1)
     {
-      var startY = parseInt(this.state.startingPiece.slice(0,1));
-      var startX = parseInt(this.state.startingPiece.slice(1,2));
-      
-      var endY = parseInt(name.slice(0,1));
-      var endX = parseInt(name.slice(1,2));
-      if(parseInt(this.state.board.board[endY][endX].slice(1,2)) !== this.state.board.current_color)
+      if(this.state.selectedPiece === true)
       {
-        this.state.board.movePiece(startY,startX,endY,endX);
-        for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
+        //Wenn Figur ausgewählt wurde
+        var startY = parseInt(this.state.startingPiece.slice(0,1));
+        var startX = parseInt(this.state.startingPiece.slice(1,2));
+        
+        var endY = parseInt(name.slice(0,1));
+        var endX = parseInt(name.slice(1,2));
+        if(parseInt(this.state.board.board[endY][endX].slice(1,2)) !== this.state.board.current_color)
         {
-          this.state.pieceBackgroundColors[i] = "";
-        }
-        if(this.state.board.isWhiteCheck)
-        {
-          var [kingX,kingY] = this.state.board.getKingPosition(0, this.state.board.board);
-          this.state.pieceBackgroundColors[kingY*8 + kingX] = " check"
+          var [possible, castling, enPassant, promotion] = this.state.board.isMovePossible(startY,startX,endY,endX);
+          if(possible)
+          {
+            if(castling)
+            {
+              if(endX - startX < 0)
+              {
+                //Lange Rochade
+                this.state.moveHistory.push([
+                  [startY, startX, endY, endX, EMPTY, this.state.board.board[startY][startX]], 
+                  [startY, 0, endY, 3, EMPTY, this.state.board.board[startY][0]]
+                ]);
+              }
+              else
+              {
+                //Kurze Rochade
+                this.state.moveHistory.push([
+                  [startY, startX, endY, endX, EMPTY, this.state.board.board[startY][startX]], 
+                  [startY, 7, endY, 5, EMPTY, this.state.board.board[startY][7]]
+                ]);
+              }
+            }
+            else if(enPassant)
+            {
+              //En Passant
+              this.state.moveHistory.push([
+                [startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]],
+                [startY, endX, startY, endX, this.state.board.board[startY][endX], EMPTY]
+                
+              ]);
+            }
+            else if(promotion)
+            {
+              //Promtion
+              this.state.moveHistory.push([
+                
+                [startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]],
+                [endY, endX, endY, endX, this.state.board.board[endY][endX], "q" + String(this.state.board.current_color)]
+              ]);
+            }
+            else{
+              this.state.moveHistory.push([[startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]]]);
+            }
+            this.setState({"moveHistoryIndex": this.state.moveHistoryIndex+ 1});
+          }
           
-        }
-        if(this.state.board.isBlackCheck)
-        {
-          var [kingX,kingY] = this.state.board.getKingPosition(1, this.state.board.board);
-          this.state.pieceBackgroundColors[kingY*8 + kingX] = " check"
+          //Bewegt die Figur
+          this.state.board.movePiece(startY,startX,endY,endX);
+          //
           
+          for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
+          {
+            this.state.pieceBackgroundColors[i] = "";
+          }
+          if(promotion)
+          {
+            this.state.board.promotePiece(endX, (1-this.state.board.current_color), "q");
+            this.state.board.calculateChecks();
+            
+          }
+          
+          this.calculateBackground();
+          
+          if(this.state.board.checkMate === true)
+          {
+            alert("Checkmate!");
+            console.log(this.state.board.current_color + "lost");
+          }
+          else if(this.state.board.staleMate === true)
+          {
+            alert("Stalemate!");
+            console.log("Draw!");
+          }
         }
-        this.setState({"movingPiece": false});
-        this.setState({"startingPiece":"aa"});
-        this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
-        this.state.pieceBackgroundColors[startY*8 + startX] = "";
-        if(this.state.board.checkMate === true)
-        {
-          alert("Checkmate!");
-          console.log(this.state.board.current_color + "lost");
+        else if(startX !== endX || startY !== endY){
+          for(i =0;i<this.state.pieceBackgroundColors.length;i++)
+          {
+            this.state.pieceBackgroundColors[i] = "";
+          }
+          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
+          this.state.pieceBackgroundColors[startY*8 + startX] = "";
+          
+          this.setState({"selectedPiece": true});
+          this.setState({"startingPiece":name});
+          this.state.squareColors[endY*8 + endX] = "selected";
+          var possibleMoves = this.state.board.getPossibleMoves(endX,endY);
+          for(i = 0; i<possibleMoves.length;i++)
+          {
+            this.state.pieceBackgroundColors[possibleMoves[i][0]*8 + possibleMoves[i][1]] += " possible-position";
+          }
         }
-        else if(this.state.board.staleMate === true)
-        {
-          alert("Stalemate!");
-          console.log("Draw!");
+        else{
+          for(i =0;i<this.state.pieceBackgroundColors.length;i++)
+          {
+            this.state.pieceBackgroundColors[i] =  this.state.pieceBackgroundColors[i] !== " check" ?  "": " check";
+          }
+          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
+          this.state.pieceBackgroundColors[startY*8 + startX] = this.state.pieceBackgroundColors[startY*8 + startX] !== " check" ?  "": " check";
+          this.setState({"selectedPiece": false});
+          this.setState({"startingPiece":"aa"});
         }
       }
-      else if(startX != endX || startY != endY){
-        for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
+      else
+      {
+        var targetY = parseInt(name.slice(0,1));
+        var targetX = parseInt(name.slice(1,2));
+        
+        
+        if(this.state.board.board[targetY][targetX] !== "  " && parseInt(this.state.board.board[targetY][targetX].slice(1,2)) === this.state.board.current_color)
         {
-          this.state.pieceBackgroundColors[i] = "";
+          this.setState({"selectedPiece": true});
+          this.setState({"startingPiece":name});
+          this.state.squareColors[targetY*8 + targetX] = "selected";
+          possibleMoves = this.state.board.getPossibleMoves(targetX,targetY);
+          for(i = 0; i<possibleMoves.length;i++)
+          {
+            this.state.pieceBackgroundColors[possibleMoves[i][0]*8 + possibleMoves[i][1]] += " possible-position";
+          }
         }
-        this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
-        this.state.pieceBackgroundColors[startY*8 + startX] = "";
-
-        this.setState({"movingPiece": true});
-        this.setState({"startingPiece":name});
-        console.log(String(endY*10+endX));
-        this.state.squareColors[endY*8 + endX] = "selected";
-        var possibleMoves = this.state.board.getPossibleMoves(endX,endY);
-        for(var i = 0; i<possibleMoves.length;i++)
-        {
-          this.state.pieceBackgroundColors[possibleMoves[i][0]*8 + possibleMoves[i][1]] += " possible-position";
-        }
-      }
-      else{
-        for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
-        {
-          this.state.pieceBackgroundColors[i] = "";
-        }
-        this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
-        this.state.pieceBackgroundColors[startY*8 + startX] = "";
-        this.setState({"movingPiece": false});
-        this.setState({"startingPiece":"aa"});
       }
     }
-    else
+  }
+  
+  calculateBackground()
+  {
+    var pieceBackgroundTemp = []
+    for(var i = 0; i<64;i++)
     {
-      var targetY = parseInt(name.slice(0,1));
-      var targetX = parseInt(name.slice(1,2));
+      pieceBackgroundTemp.push("");
+    }
+    if(this.state.board.isWhiteCheck)
+    {
+      var [kingX,kingY] = this.state.board.getKingPosition(0, this.state.board.board);
+      pieceBackgroundTemp[kingY*8 + kingX] = " check";
       
-      
-      if(this.state.board.board[targetY][targetX] !== "  " && parseInt(this.state.board.board[targetY][targetX].slice(1,2)) === this.state.board.current_color)
+    }
+    if(this.state.board.isBlackCheck)
+    {
+      [kingX,kingY] = this.state.board.getKingPosition(1, this.state.board.board);
+      pieceBackgroundTemp[kingY*8 + kingX] = " check";
+    }
+    
+    var squareColorTemp = [];
+    for(i = 0;i < 8 ;i++)
+    {
+      for (var j = 0; j<8;j++)
       {
-        this.setState({"movingPiece": true});
-        this.setState({"startingPiece":name});
-        console.log(String(targetY*10+targetX));
-        this.state.squareColors[targetY*8 + targetX] = "selected";
-        var possibleMoves = this.state.board.getPossibleMoves(targetX,targetY);
-        for(var i = 0; i<possibleMoves.length;i++)
-        {
-          this.state.pieceBackgroundColors[possibleMoves[i][0]*8 + possibleMoves[i][1]] += " possible-position";
-        }
+        squareColorTemp.push((i+j) % 2 == 0 ? "black" : "white");
       }
+    }
+    this.setState({"squareColors": squareColorTemp});
+    this.setState({"selectedPiece": false});
+    this.setState({"startingPiece":"aa"});
+    this.setState({"pieceBackgroundColors": pieceBackgroundTemp});
+  }
+  
+  revertMove(event)
+  {
+    
+    if(event.keyCode === 37 && this.state.moveHistoryIndex >= 0)
+    {
+      for(var i = 0; i<this.state.moveHistory[this.state.moveHistoryIndex].length;i++)
+      {
+        var move = this.state.moveHistory[this.state.moveHistoryIndex][i];
+        this.state.board.revertMove(move[0],move[1],move[2],move[3],move[4],move[5]);
+        this.setState({"selectedPiece": false});
+      }
+      this.setState({"moveHistoryIndex": this.state.moveHistoryIndex-1});
+      this.calculateBackground();
+      
+    }
+    else if(event.keyCode === 39 && this.state.moveHistoryIndex < this.state.moveHistory.length-1)
+    {
+      for(i = 0; i<this.state.moveHistory[this.state.moveHistoryIndex+1].length;i++)
+      {
+        move = this.state.moveHistory[this.state.moveHistoryIndex+1][i];
+        this.state.board.moveWithoutChecks(move[0], move[1], move[2], move[3], move[5]); 
+      }
+      this.setState({"moveHistoryIndex": this.state.moveHistoryIndex+1});
+      this.calculateBackground();
     }
     
   }
   
+  
+  
   render()
   {
+    
     let pieceDictionary = {"  ": null,"p0" : "pawn_white", "b0" : "bishop_white", "n0": "knight_white", "r0" : "rook_white", "q0" : "queen_white", "k0" : "king_white",
     "p1" : "pawn_black", "b1" : "bishop_black", "n1": "knight_black", "r1" : "rook_black", "q1" : "queen_black", "k1" : "king_black"};
     return <div>
