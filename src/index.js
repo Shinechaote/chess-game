@@ -1,10 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Board from "./chess.js";
+import minimaxRoot from "./chess_ai.js";
 import './index.css';
-
-let EMPTY = "  ";
-
 
 class App extends React.Component {
   constructor(props)
@@ -27,7 +25,6 @@ class App extends React.Component {
         pieceBackgroundColors.push("");
       }
     }
-    var moveHistory = [];
     
     this.state = {
       "board" : props.board,
@@ -35,8 +32,6 @@ class App extends React.Component {
       "startingPiece" : "aa",
       "squareColors" : colors,
       "pieceBackgroundColors" : pieceBackgroundColors,
-      "moveHistory": moveHistory,
-      "moveHistoryIndex" : -1
     };
     this.movePiece = this.movePiece.bind(this);
     this.revertMove = this.revertMove.bind(this);
@@ -50,9 +45,9 @@ class App extends React.Component {
   
   movePiece(name)
   {
-    if(this.state.moveHistoryIndex === this.state.moveHistory.length-1)
+    if(!this.state.board.isInReverse())
     {
-      if(this.state.selectedPiece === true)
+      if(this.state.selectedPiece === true && !this.state.board.checkMate && !this.state.board.staleMate)
       {
         //Wenn Figur ausgewählt wurde
         var startY = parseInt(this.state.startingPiece.slice(0,1));
@@ -60,83 +55,43 @@ class App extends React.Component {
         
         var endY = parseInt(name.slice(0,1));
         var endX = parseInt(name.slice(1,2));
-        if(parseInt(this.state.board.board[endY][endX].slice(1,2)) !== this.state.board.current_color)
-        {
-          var [possible, castling, enPassant, promotion] = this.state.board.isMovePossible(startY,startX,endY,endX);
-          if(possible)
-          {
-            if(castling)
-            {
-              if(endX - startX < 0)
-              {
-                //Lange Rochade
-                this.state.moveHistory.push([
-                  [startY, startX, endY, endX, EMPTY, this.state.board.board[startY][startX]], 
-                  [startY, 0, endY, 3, EMPTY, this.state.board.board[startY][0]]
-                ]);
-              }
-              else
-              {
-                //Kurze Rochade
-                this.state.moveHistory.push([
-                  [startY, startX, endY, endX, EMPTY, this.state.board.board[startY][startX]], 
-                  [startY, 7, endY, 5, EMPTY, this.state.board.board[startY][7]]
-                ]);
-              }
-            }
-            else if(enPassant)
-            {
-              //En Passant
-              this.state.moveHistory.push([
-                [startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]],
-                [startY, endX, startY, endX, this.state.board.board[startY][endX], EMPTY]
-                
-              ]);
-            }
-            else if(promotion)
-            {
-              //Promtion
-              this.state.moveHistory.push([
-                
-                [startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]],
-                [endY, endX, endY, endX, this.state.board.board[endY][endX], "q" + String(this.state.board.current_color)]
-              ]);
-            }
-            else{
-              this.state.moveHistory.push([[startY, startX, endY, endX, this.state.board.board[endY][endX], this.state.board.board[startY][startX]]]);
-            }
-            this.setState({"moveHistoryIndex": this.state.moveHistoryIndex+ 1});
-          }
-          
+        if(this.state.board.isValidDestination(endY, endX))
+        { 
           //Bewegt die Figur
-          this.state.board.movePiece(startY,startX,endY,endX);
-          //
+
+
+          var [isPossible, isCastling, isEnPassant, isPromotion] = this.state.board.movePiece(startY,startX,endY,endX);
           
           for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
           {
             this.state.pieceBackgroundColors[i] = "";
           }
-          if(promotion)
+          if(isPromotion)
           {
             this.state.board.promotePiece(endX, (1-this.state.board.current_color), "q");
             this.state.board.calculateChecks();
-            
           }
-          
+          this.setState({"selectedPiece": false});
           this.calculateBackground();
-          
           if(this.state.board.checkMate === true)
           {
             alert("Checkmate!");
-            console.log(this.state.board.current_color + "lost");
+            console.log(this.state.board.current_color + " lost!");
           }
           else if(this.state.board.staleMate === true)
           {
             alert("Stalemate!");
             console.log("Draw!");
           }
+          if(isPossible && !this.state.board.checkMate && !this.state.board.staleMate)
+          {
+            [startY, startX, endY, endX] = minimaxRoot(3, this.state.board, true);
+            this.state.board.movePiece(startY,startX,endY,endX);  
+          }
+          
         }
         else if(startX !== endX || startY !== endY){
+          //Es wurde eine eigene Figur als Ziel ausgewählt
           for(i =0;i<this.state.pieceBackgroundColors.length;i++)
           {
             this.state.pieceBackgroundColors[i] = "";
@@ -154,6 +109,7 @@ class App extends React.Component {
           }
         }
         else{
+          //Es wurde das gleiche Feld nochmal ausgewählt
           for(i =0;i<this.state.pieceBackgroundColors.length;i++)
           {
             this.state.pieceBackgroundColors[i] =  this.state.pieceBackgroundColors[i] !== " check" ?  "": " check";
@@ -166,10 +122,10 @@ class App extends React.Component {
       }
       else
       {
+        //Es wird eine Figur ausgewählt
         var targetY = parseInt(name.slice(0,1));
         var targetX = parseInt(name.slice(1,2));
-        
-        
+
         if(this.state.board.board[targetY][targetX] !== "  " && parseInt(this.state.board.board[targetY][targetX].slice(1,2)) === this.state.board.current_color)
         {
           this.setState({"selectedPiece": true});
@@ -209,7 +165,7 @@ class App extends React.Component {
     {
       for (var j = 0; j<8;j++)
       {
-        squareColorTemp.push((i+j) % 2 == 0 ? "black" : "white");
+        squareColorTemp.push((i+j) % 2 === 0 ? "black" : "white");
       }
     }
     this.setState({"squareColors": squareColorTemp});
@@ -221,26 +177,16 @@ class App extends React.Component {
   revertMove(event)
   {
     
-    if(event.keyCode === 37 && this.state.moveHistoryIndex >= 0)
+    if(event.keyCode === 37)
     {
-      for(var i = 0; i<this.state.moveHistory[this.state.moveHistoryIndex].length;i++)
-      {
-        var move = this.state.moveHistory[this.state.moveHistoryIndex][i];
-        this.state.board.revertMove(move[0],move[1],move[2],move[3],move[4],move[5]);
-        this.setState({"selectedPiece": false});
-      }
-      this.setState({"moveHistoryIndex": this.state.moveHistoryIndex-1});
+      this.state.board.goBackInHistory();
+      this.setState({"selectedPiece": false});
       this.calculateBackground();
-      
     }
-    else if(event.keyCode === 39 && this.state.moveHistoryIndex < this.state.moveHistory.length-1)
+    else if(event.keyCode === 39)
     {
-      for(i = 0; i<this.state.moveHistory[this.state.moveHistoryIndex+1].length;i++)
-      {
-        move = this.state.moveHistory[this.state.moveHistoryIndex+1][i];
-        this.state.board.moveWithoutChecks(move[0], move[1], move[2], move[3], move[5]); 
-      }
-      this.setState({"moveHistoryIndex": this.state.moveHistoryIndex+1});
+      this.state.board.goForwardInHistory();
+      this.setState({"selectedPiece": false});
       this.calculateBackground();
     }
     
@@ -360,8 +306,8 @@ class Square extends React.Component{
       </div>
     }
     var pieceClass = "piece " + this.props.pieceColor;
-    return <div onClick = {this.handleClick} className={this.props.color}>
-    <img className={pieceClass} src= {require('../public/pieces/'+this.props.piece+".png").default} />
+    return <div  onClick = {this.handleClick} className={this.props.color}>
+    <img alt={this.props.piece} className={pieceClass} src= {require('../public/pieces/'+this.props.piece+".png").default} />
     </div>
   }
 }

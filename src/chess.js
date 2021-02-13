@@ -6,7 +6,8 @@ export default class Board {
     constructor()
     {
         this.board = this.create_board();
-        this.lastBoard = JSON.parse(JSON.stringify(this.board));
+        this.historyBoards = [JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board))];
+        this.uglyMoveStates = [];
         
         this.current_color = WHITE;
         this.isWhiteCheck = false;
@@ -18,6 +19,9 @@ export default class Board {
         //Ob man gerade am Rochieren ist
         this.staleMate = false;
         this.checkMate = false;
+        this.moveRepitition = 0;
+        this.moveHistoryIndex = -1;
+        this.moveHistory = [];
     }
     
     printBoard(arr)
@@ -29,7 +33,7 @@ export default class Board {
     }
     
     arrayColumn = (arr, n) => arr.map(x => x[n]);
-    
+
     create_board()
     {
         var board = [];
@@ -49,16 +53,19 @@ export default class Board {
         
         if(this.checkMate === true || this.staleMate === true)
         {
-            return false;
+            console.log("Checkmate:" + this.checkMate + " Stalemate: " + this.staleMate);
+            return [false,false,false,false];
         }
-        var [possible,castling, enPassant, promotion] = this.isMovePossible(startRow,startCol,destinationRow,destinationCol);
-        if(possible)
+        var [isPossible,isCastling, isEnPassant, isPromotion] = this.isMovePossible(startRow,startCol,destinationRow,destinationCol);
+        if(isPossible)
         {
-            this.lastBoard = JSON.parse(JSON.stringify(this.board));
+            this.addToMoveHistory(startRow, startCol, destinationRow, destinationCol, isPossible, isCastling, isEnPassant, isPromotion);
+            this.historyBoards.push(JSON.parse(JSON.stringify(this.board)));
+            this.historyBoards = this.historyBoards.slice(1);
             this.board[destinationRow][destinationCol] = this.board[startRow][startCol]
             this.board[startRow][startCol] = EMPTY;
             //Workaround damit man rochieren kann
-            if(castling)
+            if(isCastling)
             {
                 this.castlePossible[this.current_color] = [false,false];
                 var rookRow = startRow;
@@ -68,7 +75,7 @@ export default class Board {
                 this.board[rookRow][rookCol] = EMPTY;
                 this.castlePossible[this.current_color] = [false,false];
             }
-            if(enPassant)
+            if(isEnPassant)
             {
                 var passantRow = startRow;
                 var passantCol = destinationCol;
@@ -80,12 +87,85 @@ export default class Board {
             {
                 this.checkMate = true;
             }
-            
-            return [true, castling, enPassant, promotion];
+            var same = true;
+            for(var i = 0; i< 8;i++)
+            {
+                for(var j = 0;j<8;j++)
+                {  
+                    if(this.historyBoards[0][j][i] !== this.board[j][i])
+                    {
+                        same = false;
+                    }
+                }
+            }
+            if(same)
+            {
+                console.log("same: " + this.moveRepitition);
+            }
+            this.moveRepitition = same ? this.moveRepitition +1 : this.moveRepitition;
+            return [true, isCastling, isEnPassant, isPromotion];
         }
         return [false,false, false, false];
     }
     
+    addToMoveHistory(startY, startX, endY, endX,isPossible, isCastling, isEnPassant, isPromotion)
+    {
+        if(isPossible)
+        {
+          if(isCastling)
+          {
+            if(endX - startX < 0)
+            {
+              //Lange Rochade
+              this.moveHistory.push([
+                [startY, startX, endY, endX, this.board[startY][startX], EMPTY], 
+                [startY, 0, endY, 3, this.board[startY][0], EMPTY]
+              ]);
+            }
+            else
+            {
+              //Kurze Rochade
+              this.moveHistory.push([
+                [startY, startX, endY, endX,this.board[startY][startX], EMPTY], 
+                [startY, 7, endY, 5,this.board[startY][7], EMPTY]
+              ]);
+            }
+          }
+          else if(isEnPassant)
+          {
+            //En Passant
+            this.moveHistory.push([
+              [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
+              [startY, endX, startY, endX, EMPTY,this.board[startY][endX]]
+              
+            ]);
+          }
+          else if(isPromotion)
+          {
+            //Promtion
+            this.moveHistory.push([
+              
+              [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
+              [endY, endX, endY, endX, "q" + String(this.current_color), this.board[endY][endX] ]
+            ]);
+          }
+          else{
+            this.moveHistory.push([[startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]]]);
+          }
+          this.moveHistoryIndex++;
+        }
+    }
+
+    isInReverse()
+    {
+        return this.moveHistory.length-1 !== this.moveHistoryIndex;
+    }
+
+    isValidDestination(row, column)
+    {
+        return this.board[row][column].slice(1,2) !== this.current_color;
+    }
+
     calculateChecks()
     {
         this.isWhiteCheck = this.isCheck(WHITE, this.board);
@@ -122,11 +202,11 @@ export default class Board {
         switch(this.board[startRow][startCol].slice(0,1))
         {
             case "p":
-            var [possible , enPassant, promotion] =  this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) ;
-            return [possible && this.simulateMove(startRow,startCol,destinationRow,destinationCol),false, enPassant, promotion];
+            var [isPossible , isEnPassant, isPromotion] =  this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) ;
+            return [isPossible && this.simulateMove(startRow,startCol,destinationRow,destinationCol),false, isEnPassant, isPromotion];
             case "k":
-            var [possible, castling] = this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol);
-            return [possible && this.simulateMove(startRow,startCol,destinationRow,destinationCol), castling, false, false];
+            var [isPossible, isCastling] = this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol);
+            return [isPossible && this.simulateMove(startRow,startCol,destinationRow,destinationCol), isCastling, false, false];
             
             case "q":
             return [this.isQueenMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
@@ -142,22 +222,103 @@ export default class Board {
             
             default:
             console.log("Default Case bei Move Possible");
+            console.log([startRow, startCol, destinationRow, destinationCol]);
+            this.printBoard(this.board);
             return [false,false,false,false];
         }
     }
     
-    revertMove(startY, startX , endY, endX, piece, pieceBefore)
+    ugly_moves()
     {
-        this.board[startY][startX] = pieceBefore;
-        this.board[endY][endX] = piece;
+        var possibleMoves = [];
+        for(var y = 0;y < 8;y++)
+        {
+            for(var x =0; x<8;x++)
+            {
+                if(parseInt(this.board[y][x].slice(1,2)) === this.current_color)
+                {
+                    this.getPossibleMoves(x,y).forEach((move) => (possibleMoves.push([y,x,move[0],move[1]])));
+                }
+            }
+        }
+        return possibleMoves;
+    }
+
+    ugly_move(move)
+    {
+        var [startY, startX, endY, endX] = move;
+        this.uglyMoveStates.push([JSON.parse(JSON.stringify(this.historyBoards[0])),JSON.parse(JSON.stringify(this.castlePossible))]);
+
+        var initial = this.movePiece(startY,startX,endY,endX);
+        if(!initial[0])
+        {
+            console.log(move);
+            console.log(this.current_color);
+            console.log("Initial: " + initial);
+            console.log(this.isMovePossible(startY,startX,endY, endX));
+            console.log(this.simulateMove(startY,startX,endY, endX));
+            this.printBoard(this.board);
+            
+        }
+        if(false)
+        {
+            this.promotePiece(endX, (1-this.current_color), "q");
+        }
         this.calculateChecks();
     }
-    
-    moveWithoutChecks(startY, startX , endY, endX, pieceBefore)
+
+    goBackInHistory()
     {
-        this.board[startY][startX] = EMPTY;
+        if(this.moveHistoryIndex >= 0)
+        {
+            for(var i = 0; i<this.moveHistory[this.moveHistoryIndex].length;i++)
+            {
+                this.revertMove(this.moveHistory[this.moveHistoryIndex][i])
+            }
+            this.calculateChecks();
+            this.moveHistoryIndex--;
+        }
+    }
+
+    goForwardInHistory()
+    {
+        if(this.moveHistoryIndex < this.moveHistory.length -1)
+        {
+            for(var i = 0; i<this.moveHistory[this.moveHistoryIndex+1].length;i++)
+            {
+                this.makeMove(this.moveHistory[this.moveHistoryIndex+1][i])
+            }
+            this.moveHistoryIndex++;
+            this.calculateChecks();
+        }
+    }
+
+    undo()
+    {
+        //Geht zurück und löscht den letzten Zug
+        this.historyBoards.unshift(this.uglyMoveStates[this.uglyMoveStates.length-1][0]);
+        this.historyBoards = this.historyBoards.slice(0,this.historyBoards.length-1);
+        this.castlePossible = this.uglyMoveStates[this.uglyMoveStates.length-1][1];
+        this.current_color = this.current_color === WHITE ? BLACK : WHITE;
+        this.checkMate = false;
+        this.staleMate = false
+        this.goBackInHistory();
+        this.moveHistory = this.moveHistory.slice(0, this.moveHistory.length-1);
+        this.uglyMoveStates = this.uglyMoveStates.slice(0, this.uglyMoveStates.length-1);
+    }
+
+    revertMove(move)
+    {
+        var [startY, startX , endY, endX, piece, pieceBefore] = move;
+        this.board[startY][startX] = piece;
         this.board[endY][endX] = pieceBefore;
-        this.calculateChecks();
+    }
+    
+    makeMove(move)
+    {
+        var [startY, startX , endY, endX, piece, pieceBefore] = move;
+        this.board[startY][startX] = EMPTY;
+        this.board[endY][endX] = piece;
     }
     
     
@@ -403,6 +564,11 @@ export default class Board {
     isCheckMate()
     {
         //Überprüft, ob die aktuelle Farbe Matt gesetzt ist
+        if(this.moveRepitition >= 6)
+        {
+            this.staleMate = true;
+            return false;
+        }
         for(var i =0; i<8;i++)
         {
             for(var j =0;j<8;j++)
@@ -537,7 +703,7 @@ export default class Board {
                     if(this.board[destinationRow-colorShiftRow][destinationCol] !== EMPTY && parseInt(this.board[destinationRow-colorShiftRow][destinationCol][1]) !== this.current_color )
                     {
                         //Ist der Bauer neben einem im letzten Zug gesprungen
-                        if(this.lastBoard[destinationRow+colorShiftRow][destinationCol] === "p" + String(1-this.current_color))
+                        if(this.historyBoards[0][destinationRow+colorShiftRow][destinationCol] === "p" + String(1-this.current_color))
                         {
                             enPassant = true;
                             return [true, enPassant, promotion];
