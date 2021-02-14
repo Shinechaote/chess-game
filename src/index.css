@@ -5,7 +5,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
 }
+
 
 .row
 {
@@ -13,6 +17,25 @@ body {
   height: 80%;
 }
 
+.reset-button
+{
+  color: red;
+  background-color: red;
+  margin-top: 0.5%;
+  width: 10%;
+  height: 10%;;
+}
+
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  align-items: left;
+  text-align: left;
+  min-height: 100vh;
+  margin-left: 15%;
+  margin-top: 1.5%;
+}
 
 .black
 {

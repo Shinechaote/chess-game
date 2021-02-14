@@ -24,12 +24,49 @@ export default class Board {
         this.moveHistory = [];
     }
     
+    reset()
+    {
+        this.board = this.create_board();
+        this.historyBoards = [JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board)),JSON.parse(JSON.stringify(this.board))];
+        this.uglyMoveStates = [];
+        
+        this.current_color = WHITE;
+        this.isWhiteCheck = false;
+        this.isBlackCheck = false;
+        //Überprüft ob und in welche Richtung jeweils weiß und schwarz castlen können
+        //Erster Eintrag Weiß, zweiter Schwarz
+        //Im Array: Lang rochieren, kurz rochieren
+        this.castlePossible = [[true,true],[true,true]];
+        //Ob man gerade am Rochieren ist
+        this.staleMate = false;
+        this.checkMate = false;
+        this.moveRepitition = 0;
+        this.moveHistoryIndex = -1;
+        this.moveHistory = [];
+    }
+
     printBoard(arr)
     {
         for(var i = 0;i < arr.length; i++)
         {
             console.log(arr[i]);
         }
+    }
+
+    printStatus(move)
+    {
+        this.printBoard(this.board);
+        console.log("Move: " + move);
+        console.log("Depth: " + this.uglyMoveStates.length);
+        console.log("Current Color: "  + this.current_color)
+        console.log("White Check: "  + this.isWhiteCheck)
+        console.log("Black Check: "  + this.isBlackCheck)
+        console.log("Castle Possible: "  + this.castlePossible);
+        console.log("Checkmate: "  + this.checkMate);
+        console.log("Stalemate: "  + this.staleMate);
+        console.log("Move Repition Count: "  + this.moveRepitition);
+        console.log("History Index: "  + this.moveHistoryIndex);
+        console.log(this.moveHistory);
     }
     
     arrayColumn = (arr, n) => arr.map(x => x[n]);
@@ -87,22 +124,18 @@ export default class Board {
             {
                 this.checkMate = true;
             }
-            var same = true;
+            var boardsAreEqual = true;
             for(var i = 0; i< 8;i++)
             {
                 for(var j = 0;j<8;j++)
                 {  
                     if(this.historyBoards[0][j][i] !== this.board[j][i])
                     {
-                        same = false;
+                        boardsAreEqual = false;
                     }
                 }
             }
-            if(same)
-            {
-                console.log("same: " + this.moveRepitition);
-            }
-            this.moveRepitition = same ? this.moveRepitition +1 : this.moveRepitition;
+            this.moveRepitition = boardsAreEqual ? this.moveRepitition +1 : 0;
             return [true, isCastling, isEnPassant, isPromotion];
         }
         return [false,false, false, false];
@@ -247,7 +280,7 @@ export default class Board {
     ugly_move(move)
     {
         var [startY, startX, endY, endX] = move;
-        this.uglyMoveStates.push([JSON.parse(JSON.stringify(this.historyBoards[0])),JSON.parse(JSON.stringify(this.castlePossible))]);
+        this.uglyMoveStates.push([JSON.parse(JSON.stringify(this.historyBoards[0])),JSON.parse(JSON.stringify(this.castlePossible)), this.moveRepitition]);
 
         var initial = this.movePiece(startY,startX,endY,endX);
         if(!initial[0])
@@ -265,6 +298,7 @@ export default class Board {
             this.promotePiece(endX, (1-this.current_color), "q");
         }
         this.calculateChecks();
+        return initial[0];
     }
 
     goBackInHistory()
@@ -301,7 +335,8 @@ export default class Board {
         this.castlePossible = this.uglyMoveStates[this.uglyMoveStates.length-1][1];
         this.current_color = this.current_color === WHITE ? BLACK : WHITE;
         this.checkMate = false;
-        this.staleMate = false
+        this.staleMate = false;
+        this.moveRepitition = this.uglyMoveStates[this.uglyMoveStates.length-1][2];
         this.goBackInHistory();
         this.moveHistory = this.moveHistory.slice(0, this.moveHistory.length-1);
         this.uglyMoveStates = this.uglyMoveStates.slice(0, this.uglyMoveStates.length-1);
@@ -462,7 +497,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
+            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1 && color === BLACK)
             {
                 return true;
             }
@@ -485,7 +520,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
+            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1  && color === WHITE)
             {
                 return true;
             }
@@ -510,7 +545,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === BLACK)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
             {
                 return true;
             }
@@ -532,7 +567,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === WHITE)
+            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
             {
                 return true;
             }

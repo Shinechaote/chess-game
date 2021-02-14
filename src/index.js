@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Button, Switch } from 'react-native';
 import Board from "./chess.js";
 import minimaxRoot from "./chess_ai.js";
 import './index.css';
@@ -32,9 +33,12 @@ class App extends React.Component {
       "startingPiece" : "aa",
       "squareColors" : colors,
       "pieceBackgroundColors" : pieceBackgroundColors,
+      "whiteIsComputer": false,
+      "blackIsComputer": false,
     };
     this.movePiece = this.movePiece.bind(this);
     this.revertMove = this.revertMove.bind(this);
+    this.resetBoard = this.resetBoard.bind(this);
   }
   componentDidMount () {
     window.addEventListener('keydown', this.revertMove)
@@ -43,7 +47,41 @@ class App extends React.Component {
     window.removeEventListener('keydown', this.revertMove)
   }
   
+  resetBoard()
+  {
+    this.state.board.reset();
+    this.calculateBackground();
+  }
+  
+  Sleep(milliseconds)
+  {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+  }
+  
+  computerMove()
+  {
+    if(!this.state.board.checkMate && !this.state.board.staleMate)
+    {
+      var [startY, startX, endY, endX] = minimaxRoot(3, this.state.board, true);
+      this.state.board.movePiece(startY,startX,endY,endX);  
+      this.calculateBackground();
+    }
+  }
+  
   movePiece(name)
+  {
+    if(!this.state.whiteIsComputer)
+    {
+      this.movePieceHuman(name);
+      console.log(this.state.selectedPiece);
+      if(this.state.blackIsComputer && this.state.selectedPiece)
+      {
+        this.computerMove();
+      }
+    }
+  }
+
+  movePieceHuman(name)
   {
     if(!this.state.board.isInReverse())
     {
@@ -58,8 +96,8 @@ class App extends React.Component {
         if(this.state.board.isValidDestination(endY, endX))
         { 
           //Bewegt die Figur
-
-
+          
+          
           var [isPossible, isCastling, isEnPassant, isPromotion] = this.state.board.movePiece(startY,startX,endY,endX);
           
           for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
@@ -73,6 +111,8 @@ class App extends React.Component {
           }
           this.setState({"selectedPiece": false});
           this.calculateBackground();
+          
+          
           if(this.state.board.checkMate === true)
           {
             alert("Checkmate!");
@@ -83,11 +123,7 @@ class App extends React.Component {
             alert("Stalemate!");
             console.log("Draw!");
           }
-          if(isPossible && !this.state.board.checkMate && !this.state.board.staleMate)
-          {
-            [startY, startX, endY, endX] = minimaxRoot(3, this.state.board, true);
-            this.state.board.movePiece(startY,startX,endY,endX);  
-          }
+          
           
         }
         else if(startX !== endX || startY !== endY){
@@ -125,7 +161,7 @@ class App extends React.Component {
         //Es wird eine Figur ausgewählt
         var targetY = parseInt(name.slice(0,1));
         var targetX = parseInt(name.slice(1,2));
-
+        
         if(this.state.board.board[targetY][targetX] !== "  " && parseInt(this.state.board.board[targetY][targetX].slice(1,2)) === this.state.board.current_color)
         {
           this.setState({"selectedPiece": true});
@@ -199,7 +235,7 @@ class App extends React.Component {
     
     let pieceDictionary = {"  ": null,"p0" : "pawn_white", "b0" : "bishop_white", "n0": "knight_white", "r0" : "rook_white", "q0" : "queen_white", "k0" : "king_white",
     "p1" : "pawn_black", "b1" : "bishop_black", "n1": "knight_black", "r1" : "rook_black", "q1" : "queen_black", "k1" : "king_black"};
-    return <div>
+    return <div className="center-screen">
     <div className="row">
     <Square onPress={this.movePiece} id="00" name="00"pieceColor={this.state.pieceBackgroundColors[0]} color={this.state.squareColors[0]} piece = {pieceDictionary[this.state.board.board[0][0]]}/>
     <Square onPress={this.movePiece} id="01" name="01"pieceColor={this.state.pieceBackgroundColors[1]} color={this.state.squareColors[1]} piece = {pieceDictionary[this.state.board.board[0][1]]}/>
@@ -280,6 +316,16 @@ class App extends React.Component {
     <Square onPress={this.movePiece} id="76" name="76"pieceColor={this.state.pieceBackgroundColors[62]} color={this.state.squareColors[62]} piece = {pieceDictionary[this.state.board.board[7][6]]}/>
     <Square onPress={this.movePiece} id="77" name="77"pieceColor={this.state.pieceBackgroundColors[63]} color={this.state.squareColors[63]} piece = {pieceDictionary[this.state.board.board[7][7]]}/>
     </div>
+    <div className= "reset-button">
+    <Button color="#f00" title = "Reset Board" onPress={this.resetBoard}/>
+    </div>
+    <div>
+    <Switch trackColor={{false: "#0f0", true: "#f00"}} onValueChange={() => (this.setState({"whiteIsComputer": !this.state.whiteIsComputer, "blackIsComputer": false}))} value={this.state.whiteIsComputer}/>
+    </div>
+    <div>
+    <Switch trackColor={{false: "#0f0", true: "#f00"}} onValueChange={() => (this.setState({"blackIsComputer": !this.state.blackIsComputer, "whiteIsComputer": false}))} value={this.state.blackIsComputer}/>
+    </div>
+
     </div>
   }
   
