@@ -5,6 +5,8 @@ import Board from "./chess.js";
 import minimaxRoot from "./chess_ai.js";
 import './index.css';
 
+let EMPTY = "  ";
+
 class App extends React.Component {
   constructor(props)
   {
@@ -49,8 +51,34 @@ class App extends React.Component {
   
   resetBoard()
   {
-    this.state.board.reset();
-    this.calculateBackground();
+    var testState = [];
+  //   testState.push([["r1",EMPTY,EMPTY,EMPTY,"k1",EMPTY,EMPTY,"r1"],
+  //                   ["p1",EMPTY,"p1","p1","q1","p1","b1",EMPTY],
+  //                   ["b1","n1",EMPTY,EMPTY,"p1","n1","p1",EMPTY],
+  //                   [EMPTY,EMPTY,EMPTY,"p0","n0",EMPTY,EMPTY,EMPTY],
+  //                   [EMPTY,"p1",EMPTY,EMPTY,"p0",EMPTY,EMPTY,EMPTY],
+  //                   [EMPTY,EMPTY,"n0",EMPTY,EMPTY,"q0",EMPTY,"p1"],
+  //                   ["p0","p0","p0","b0","b0","p0","p0","p0"],
+  //                   ["r0",EMPTY,EMPTY,EMPTY,"k0",EMPTY,EMPTY,"r0"]
+  // ]);
+  testState.push([["n1",EMPTY,"n1",EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+                    ["p0","p0","p0","k1",EMPTY,EMPTY,EMPTY,EMPTY],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,"k0","p1","p1","p1"],
+                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,"n0",EMPTY,"n0"]
+  ]);
+  testState.push(1);
+  testState.push([[true,true],[true,true]]);
+    this.state.board.getPossibleNodes(1,testState);  
+    this.state.board.getPossibleNodes(2,testState);  
+    this.state.board.getPossibleNodes(3,testState);  
+    this.state.board.getPossibleNodes(4,testState);  
+    // this.state.board.getPossibleNodes(4,testState);  
+    // this.state.board.reset();
+    // this.calculateBackground();
   }
   
   Sleep(milliseconds)
@@ -63,7 +91,7 @@ class App extends React.Component {
     if(!this.state.board.checkMate && !this.state.board.staleMate)
     {
       var [startY, startX, endY, endX] = minimaxRoot(3, this.state.board, true);
-      this.state.board.movePiece(startY,startX,endY,endX);  
+      this.state.board.movePiece(startY,startX,endY,endX, "q");  
       this.calculateBackground();
     }
   }
@@ -73,7 +101,6 @@ class App extends React.Component {
     if(!this.state.whiteIsComputer)
     {
       this.movePieceHuman(name);
-      console.log(this.state.selectedPiece);
       if(this.state.blackIsComputer && this.state.selectedPiece)
       {
         this.computerMove();
@@ -98,7 +125,7 @@ class App extends React.Component {
           //Bewegt die Figur
           
           
-          var [isPossible, isCastling, isEnPassant, isPromotion] = this.state.board.movePiece(startY,startX,endY,endX);
+          var [isPossible, isCastling, isEnPassant, isPromotion] = this.state.board.movePiece(startY,startX,endY,endX, "q");
           
           for(var i =0;i<this.state.pieceBackgroundColors.length;i++)
           {

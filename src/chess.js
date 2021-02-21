@@ -1,3 +1,5 @@
+import testUtils from "react-dom/test-utils";
+
 let EMPTY = "  ";
 let WHITE = 0;
 let BLACK = 1;
@@ -44,7 +46,134 @@ export default class Board {
         this.moveHistoryIndex = -1;
         this.moveHistory = [];
     }
+    
+    getPossibleNodes(depth, state)
+    {
+        console.log("Started with depth: "+ depth);
+        var testBoard = new Board();
+        var baseBoard = new Board();
+        if(state != null)
+        {
+            baseBoard.board = JSON.parse(JSON.stringify(state[0]));
+            baseBoard.historyBoards = [JSON.parse(JSON.stringify(baseBoard.board)),JSON.parse(JSON.stringify(baseBoard.board)),JSON.parse(JSON.stringify(baseBoard.board)),JSON.parse(JSON.stringify(baseBoard.board))];
+            baseBoard.current_color = state[1];
+            baseBoard.castlePossible = JSON.parse(JSON.stringify(state[2]));
+            baseBoard.calculateChecks();
 
+            testBoard.board = JSON.parse(JSON.stringify(state[0]));
+            testBoard.historyBoards = [JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board))];
+            testBoard.current_color = state[1];
+            testBoard.castlePossible = JSON.parse(JSON.stringify(state[2]));
+            testBoard.calculateChecks();
+            if(testBoard.isCheckMate())
+            {
+                return 0;
+            }
+            if(testBoard.staleMate)
+            {
+                return 0;
+            }
+        }
+        
+        if(depth == 0)
+        {
+            testBoard.printBoard(testBoard.board);
+            console.log(testBoard.ugly_moves());
+            return 1;
+        }
+        
+        var nodes = 0;
+        var possibleMoves = testBoard.ugly_moves();
+        console.log(possibleMoves.length);
+        for(var i = 0;i<possibleMoves.length;i++)
+        {
+            if(!testBoard.equals(baseBoard))
+            {
+                console.log(depth);
+            }
+            var possible = testBoard.ugly_move(possibleMoves[i]);
+            if(!possible)
+            {
+                console.log(depth);
+            }
+            if(depth != 0)
+            {
+                var possibleNodes = this.getPossibleNodesHelper(depth-1, testBoard);
+                if(depth >= 4)
+                {
+                    var col = ["a","b","c","d","e","f","g","h"][possibleMoves[i][1]];
+                    console.log("Move: " + col +   (8-possibleMoves[i][0])  + ["a","b","c","d","e","f","g","h"][possibleMoves[i][3]]   + (8-possibleMoves[i][2]) + "  " + possibleMoves[i][4]  + " " + possibleNodes + " nodes");
+                }
+                nodes += possibleNodes;
+            }
+            testBoard.undo();
+        }
+        console.log("Depth: "+ depth + " " + nodes + " nodes");
+        return nodes;
+    }
+    
+    equals(boardObject)
+    {
+        for(var i =0;i<8;i++)
+        {
+            for(var j=0; j<8;j++)
+            {
+                if(this.board[i][j] !== boardObject.board[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+        for(var k =0;k<4;k++)
+        {
+            for(var i =0;i<8;i++)
+            {
+                for(var j=0; j<8;j++)
+                {
+                    if(this.historyBoards[k][i][j] !== boardObject.historyBoards[k][i][j])
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        if(this.castlePossible[0][0] !== boardObject.castlePossible[0][0] || this.castlePossible[0][1] !== boardObject.castlePossible[0][1] ||  this.castlePossible[1][0] !== boardObject.castlePossible[1][0] || this.castlePossible[1][1] !== boardObject.castlePossible[1][1])
+        {
+            return false;
+        }
+        return true;
+    }
+
+    getPossibleNodesHelper(depth, testBoard)
+    {
+        var nodes = 0;
+        var possibleMoves = testBoard.ugly_moves();
+        if(depth == 0)
+        {
+            return 1;
+        }
+        for(var i = 0;i<possibleMoves.length;i++)
+        {
+            var possible = testBoard.ugly_move(possibleMoves[i]); 
+            if(!possible)
+            {
+                console.log(depth);
+            }
+            if(depth != 0)
+            {
+                var possibleNodes = this.getPossibleNodesHelper(depth-1, testBoard);
+                // if(depth == 1)
+                // {
+                //     var col = ["a","b","c","d","e","f","g","h"][possibleMoves[i][1]];
+                //     console.log("Move: " + col +   (8-possibleMoves[i][0])  + ["a","b","c","d","e","f","g","h"][possibleMoves[i][3]]   + (8-possibleMoves[i][2])   + " " + possibleNodes + " nodes");
+                // }
+                nodes += possibleNodes;
+            }
+            testBoard.undo();
+        }
+        return nodes;
+    }
+    
     printBoard(arr)
     {
         for(var i = 0;i < arr.length; i++)
@@ -52,7 +181,7 @@ export default class Board {
             console.log(arr[i]);
         }
     }
-
+    
     printStatus(move)
     {
         this.printBoard(this.board);
@@ -70,7 +199,7 @@ export default class Board {
     }
     
     arrayColumn = (arr, n) => arr.map(x => x[n]);
-
+    
     create_board()
     {
         var board = [];
@@ -85,7 +214,7 @@ export default class Board {
         return board;
     }
     
-    movePiece(startRow, startCol, destinationRow, destinationCol)
+    movePiece(startRow, startCol, destinationRow, destinationCol, promotionPiece)
     {
         
         if(this.checkMate === true || this.staleMate === true)
@@ -96,10 +225,18 @@ export default class Board {
         var [isPossible,isCastling, isEnPassant, isPromotion] = this.isMovePossible(startRow,startCol,destinationRow,destinationCol);
         if(isPossible)
         {
-            this.addToMoveHistory(startRow, startCol, destinationRow, destinationCol, isPossible, isCastling, isEnPassant, isPromotion);
+            this.addToMoveHistory(startRow, startCol, destinationRow, destinationCol, promotionPiece, isPossible, isCastling, isEnPassant, isPromotion);
             this.historyBoards.push(JSON.parse(JSON.stringify(this.board)));
             this.historyBoards = this.historyBoards.slice(1);
             this.board[destinationRow][destinationCol] = this.board[startRow][startCol]
+            if(this.board[startRow][startCol].slice(0,1) === "k")
+            {
+                this.castlePossible[this.current_color] = [false,false];
+            }
+            else if(this.board[startRow][startCol].slice(0,1) === "r")
+            {
+                this.castlePossible[this.current_color][startCol === 7 ? 1 : 0] = false;
+            }
             this.board[startRow][startCol] = EMPTY;
             //Workaround damit man rochieren kann
             if(isCastling)
@@ -110,13 +247,16 @@ export default class Board {
                 var castleCol = rookCol === 7 ? 5 : 3;
                 this.board[rookRow][castleCol] = this.board[rookRow][rookCol]
                 this.board[rookRow][rookCol] = EMPTY;
-                this.castlePossible[this.current_color] = [false,false];
             }
             if(isEnPassant)
             {
                 var passantRow = startRow;
                 var passantCol = destinationCol;
                 this.board[passantRow][passantCol] = EMPTY;
+            }
+            if(isPromotion)
+            {
+                this.promotePiece(destinationCol, this.current_color, promotionPiece);
             }
             this.calculateChecks();
             this.current_color = this.current_color === WHITE ? BLACK : WHITE;
@@ -141,64 +281,64 @@ export default class Board {
         return [false,false, false, false];
     }
     
-    addToMoveHistory(startY, startX, endY, endX,isPossible, isCastling, isEnPassant, isPromotion)
+    addToMoveHistory(startY, startX, endY, endX, promotionPiece,isPossible, isCastling, isEnPassant, isPromotion)
     {
         if(isPossible)
         {
-          if(isCastling)
-          {
-            if(endX - startX < 0)
+            if(isCastling)
             {
-              //Lange Rochade
-              this.moveHistory.push([
-                [startY, startX, endY, endX, this.board[startY][startX], EMPTY], 
-                [startY, 0, endY, 3, this.board[startY][0], EMPTY]
-              ]);
+                if(endX - startX < 0)
+                {
+                    //Lange Rochade
+                    this.moveHistory.push([
+                        [startY, startX, endY, endX, this.board[startY][startX], EMPTY], 
+                        [startY, 0, endY, 3, this.board[startY][0], EMPTY]
+                    ]);
+                }
+                else
+                {
+                    //Kurze Rochade
+                    this.moveHistory.push([
+                        [startY, startX, endY, endX,this.board[startY][startX], EMPTY], 
+                        [startY, 7, endY, 5,this.board[startY][7], EMPTY]
+                    ]);
+                }
             }
-            else
+            else if(isEnPassant)
             {
-              //Kurze Rochade
-              this.moveHistory.push([
-                [startY, startX, endY, endX,this.board[startY][startX], EMPTY], 
-                [startY, 7, endY, 5,this.board[startY][7], EMPTY]
-              ]);
+                //En Passant
+                this.moveHistory.push([
+                    [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
+                    [startY, endX, startY, endX, EMPTY,this.board[startY][endX]]
+                    
+                ]);
             }
-          }
-          else if(isEnPassant)
-          {
-            //En Passant
-            this.moveHistory.push([
-              [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
-              [startY, endX, startY, endX, EMPTY,this.board[startY][endX]]
-              
-            ]);
-          }
-          else if(isPromotion)
-          {
-            //Promtion
-            this.moveHistory.push([
-              
-              [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
-              [endY, endX, endY, endX, "q" + String(this.current_color), this.board[endY][endX] ]
-            ]);
-          }
-          else{
-            this.moveHistory.push([[startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]]]);
-          }
-          this.moveHistoryIndex++;
+            else if(isPromotion)
+            {
+                //Promtion
+                this.moveHistory.push([
+                    
+                    [startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]],
+                    [endY, endX, endY, endX, promotionPiece+this.current_color, this.board[endY][endX] ]
+                ]);
+            }
+            else{
+                this.moveHistory.push([[startY, startX, endY, endX, this.board[startY][startX], this.board[endY][endX]]]);
+            }
+            this.moveHistoryIndex++;
         }
     }
-
+    
     isInReverse()
     {
         return this.moveHistory.length-1 !== this.moveHistoryIndex;
     }
-
+    
     isValidDestination(row, column)
     {
         return this.board[row][column].slice(1,2) !== this.current_color;
     }
-
+    
     calculateChecks()
     {
         this.isWhiteCheck = this.isCheck(WHITE, this.board);
@@ -270,19 +410,19 @@ export default class Board {
             {
                 if(parseInt(this.board[y][x].slice(1,2)) === this.current_color)
                 {
-                    this.getPossibleMoves(x,y).forEach((move) => (possibleMoves.push([y,x,move[0],move[1]])));
+                    this.getPossibleMoves(x,y).forEach((move) => (possibleMoves.push([y,x,move[0],move[1], move[2]])));
                 }
             }
         }
         return possibleMoves;
     }
-
+    
     ugly_move(move)
     {
-        var [startY, startX, endY, endX] = move;
+        var [startY, startX, endY, endX, promotionPiece] = move;
         this.uglyMoveStates.push([JSON.parse(JSON.stringify(this.historyBoards[0])),JSON.parse(JSON.stringify(this.castlePossible)), this.moveRepitition]);
-
-        var initial = this.movePiece(startY,startX,endY,endX);
+        
+        var initial = this.movePiece(startY,startX,endY,endX, promotionPiece);
         if(!initial[0])
         {
             console.log(move);
@@ -293,14 +433,14 @@ export default class Board {
             this.printBoard(this.board);
             
         }
-        if(false)
+        if(initial[3])
         {
             this.promotePiece(endX, (1-this.current_color), "q");
         }
         this.calculateChecks();
         return initial[0];
     }
-
+    
     goBackInHistory()
     {
         if(this.moveHistoryIndex >= 0)
@@ -313,7 +453,7 @@ export default class Board {
             this.moveHistoryIndex--;
         }
     }
-
+    
     goForwardInHistory()
     {
         if(this.moveHistoryIndex < this.moveHistory.length -1)
@@ -326,7 +466,7 @@ export default class Board {
             this.calculateChecks();
         }
     }
-
+    
     undo()
     {
         //Geht zurück und löscht den letzten Zug
@@ -341,7 +481,7 @@ export default class Board {
         this.moveHistory = this.moveHistory.slice(0, this.moveHistory.length-1);
         this.uglyMoveStates = this.uglyMoveStates.slice(0, this.uglyMoveStates.length-1);
     }
-
+    
     revertMove(move)
     {
         var [startY, startX , endY, endX, piece, pieceBefore] = move;
@@ -366,7 +506,6 @@ export default class Board {
         if(this.board[color*7][column].slice(0,1) === "p")
         {
             this.board[color*7][column] = promotionPiece + String(color);
-            console.log("promotion possible");
             return true;
         }
         return false;
@@ -407,9 +546,19 @@ export default class Board {
         {
             return true;
         }
+
+        var otherKingX = this.getKingPosition(1-color,board)[0];
+        var otherKingY = this.getKingPosition(1-color,board)[1];
+
+        if(Math.abs(kingX-otherKingX) <= 1 && Math.abs(kingY-otherKingY) <= 1)
+        {
+            return true;
+        }
+
         //Zeile und Spalte checken
         //Zeile
         var row = board[kingY];
+
         //Rechtsseitig vom König in der Zeile
         for(var i = kingX+1; i<8;i++)
         {
@@ -497,7 +646,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1 && color === BLACK)
+            else if(diagonals[0][i] === "p0" && counter === 1 && color === BLACK)
             {
                 return true;
             }
@@ -520,7 +669,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[0][i].slice(0,1) === "p" && counter === 1  && color === WHITE)
+            else if(diagonals[0][i] === "p1" && counter === 1  && color === WHITE)
             {
                 return true;
             }
@@ -545,7 +694,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1 && color === WHITE)
+            else if(diagonals[1][i] === "p0" && counter === 1 && color === BLACK)
             {
                 return true;
             }
@@ -567,7 +716,7 @@ export default class Board {
             {
                 return true;
             }
-            else if(diagonals[1][i].slice(0,1) === "p" && counter === 1  && color === BLACK)
+            else if(diagonals[1][i] === "p1" && counter === 1  && color === WHITE)
             {
                 return true;
             }
@@ -708,7 +857,7 @@ export default class Board {
             {
                 if(this.board[destinationRow][destinationCol] === EMPTY && this.board[destinationRow-colorShiftRow][destinationCol] === EMPTY)
                 {
-                
+                    
                     return [true, enPassant, promotion];
                     
                     
@@ -720,7 +869,7 @@ export default class Board {
             //Bauer schlägt und soll maximal 1 Feld laufen können
             if(Math.abs(startRow-destinationRow) === 1 && Math.abs(startCol-destinationCol) === 1)
             {
-                if(parseInt(this.board[destinationRow][destinationCol][1]) !== this.current_color && this.board[destinationRow][destinationCol] !== EMPTY )
+                if(parseInt(this.board[destinationRow][destinationCol].slice(1,2)) !== this.current_color && this.board[destinationRow][destinationCol] !== EMPTY )
                 {
                     if(destinationRow === this.current_color * 7)
                     {
@@ -735,10 +884,10 @@ export default class Board {
                 if(this.board[destinationRow][destinationCol] === EMPTY && destinationRow === 5-(1-this.current_color)*3)
                 {
                     //Ist ein En Passant Bauer direkt neben dem Bauern
-                    if(this.board[destinationRow-colorShiftRow][destinationCol] !== EMPTY && parseInt(this.board[destinationRow-colorShiftRow][destinationCol][1]) !== this.current_color )
+                    if(this.board[destinationRow+colorShiftRow][destinationCol] === EMPTY && this.board[startRow][destinationCol] === "p" + String(1-this.current_color))
                     {
                         //Ist der Bauer neben einem im letzten Zug gesprungen
-                        if(this.historyBoards[0][destinationRow+colorShiftRow][destinationCol] === "p" + String(1-this.current_color))
+                        if(this.historyBoards[3][destinationRow+colorShiftRow][destinationCol] === "p" + String(1-this.current_color))
                         {
                             enPassant = true;
                             return [true, enPassant, promotion];
@@ -780,7 +929,11 @@ export default class Board {
         {
             if(shortCastle)
             {
-                //Kurze Rochade       
+                //Kurze Rochade
+                if(this.isCheck(this.current_color, this.board))
+                {
+                    return [false,false];
+                }       
                 for(var i = 1;i<3;i++)
                 {
                     if(this.board[destinationRow][startCol+i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol+i))
@@ -788,16 +941,36 @@ export default class Board {
                         return [false, false];
                     }
                 }
+                if(this.board[destinationRow][7] !== "r"  + this.current_color.toString())
+                {
+                    return [false,false];
+                }
                 return [true, true];
             }
             //Lange Rochade
+            if(this.isCheck(this.current_color, this.board))
+            {
+                return [false,false];
+            } 
             for( i = 1;i<4;i++)
             {
-                if(this.board[destinationRow][startCol-i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol-i))
+                if(i< 3)
                 {
-                    return [false, false];
-                    
+                    if(this.board[destinationRow][startCol-i] !== EMPTY || !this.simulateMove(startRow,startCol,destinationRow,startCol-i))
+                    {
+                        return [false, false];
+                        
+                    }
                 }
+                else if(this.board[destinationRow][startCol-i] !== EMPTY)
+                {
+                    return [false,false];
+                }
+                
+            }
+            if(this.board[destinationRow][0] !== "r" + this.current_color.toString())
+            {
+                return [false,false];
             }
             return [true, true];
             
@@ -937,7 +1110,16 @@ export default class Board {
             {
                 if(this.isMovePossible(startY,startX,startY+moves[k][0],startX+moves[k][1])[0])
                 {
-                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                    if(startY+moves[k][0] == 7 ||startY+moves[k][0] == 0 )
+                    {
+                        possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "q"+this.current_color]);
+                        possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "r"+this.current_color]);
+                        possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "n" + this.current_color]);
+                        possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "b" + this.current_color]);
+                    }
+                    else{
+                        possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "-"]);
+                    }
                 }
             }
             break;
@@ -947,7 +1129,7 @@ export default class Board {
             {
                 if(this.isMovePossible(startY,startX,startY+moves[k][0],startX+moves[k][1])[0])
                 {
-                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "-"]);
                 }
             }
             break;
@@ -957,16 +1139,16 @@ export default class Board {
             
             for(var i = 0;i<rookMoves.length;i++)
             {
-                possibleMoves.push(rookMoves[i]);
+                possibleMoves.push([rookMoves[i][0],rookMoves[i][1], rookMoves[i][2], rookMoves[i][3], "-"]);
             }
             for(i = 0;i<bishopMoves.length;i++)
             {
-                possibleMoves.push(bishopMoves[i]);
+                possibleMoves.push([bishopMoves[i][0],bishopMoves[i][1],bishopMoves[i][2],bishopMoves[i][3],"-"]);
             }
             
             break;
             case "r":
-            possibleMoves = this.getRookMoves(startX,startY);
+            possibleMoves = this.getRookMoves(startX,startY).map(rookMove => [rookMove[0],rookMove[1], rookMove[2], rookMove[3], "-"]);
             break;
             case "n":
             moves = this.getInboundKnightMoves(startY,startX);
@@ -974,12 +1156,12 @@ export default class Board {
             {
                 if(this.isMovePossible(startY,startX,startY+moves[k][0],startX+moves[k][1])[0])
                 {
-                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1]]);
+                    possibleMoves.push([startY+moves[k][0],startX+moves[k][1], "-"]);
                 }
             }
             break;
             case "b":
-            possibleMoves = this.getBishopMoves(startX,startY);
+            possibleMoves = this.getBishopMoves(startX,startY).map(bishopMove => [bishopMove[0],bishopMove[1],bishopMove[2],bishopMove[3],"-"]);
             break;
             default:
             console.log("Fehler bei Switch für getMoves");
