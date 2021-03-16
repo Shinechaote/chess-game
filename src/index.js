@@ -5,6 +5,8 @@ import Board from "./chess.js";
 import minimaxRoot from "./chess_ai.js";
 import './index.css';
 
+let WHITE = 0;
+let BLACK = 1;
 let EMPTY = "  ";
 
 class App extends React.Component {
@@ -51,34 +53,8 @@ class App extends React.Component {
   
   resetBoard()
   {
-    var testState = [];
-  //   testState.push([["r1",EMPTY,EMPTY,EMPTY,"k1",EMPTY,EMPTY,"r1"],
-  //                   ["p1",EMPTY,"p1","p1","q1","p1","b1",EMPTY],
-  //                   ["b1","n1",EMPTY,EMPTY,"p1","n1","p1",EMPTY],
-  //                   [EMPTY,EMPTY,EMPTY,"p0","n0",EMPTY,EMPTY,EMPTY],
-  //                   [EMPTY,"p1",EMPTY,EMPTY,"p0",EMPTY,EMPTY,EMPTY],
-  //                   [EMPTY,EMPTY,"n0",EMPTY,EMPTY,"q0",EMPTY,"p1"],
-  //                   ["p0","p0","p0","b0","b0","p0","p0","p0"],
-  //                   ["r0",EMPTY,EMPTY,EMPTY,"k0",EMPTY,EMPTY,"r0"]
-  // ]);
-  testState.push([["n1",EMPTY,"n1",EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
-                    ["p0","p0","p0","k1",EMPTY,EMPTY,EMPTY,EMPTY],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,"k0","p1","p1","p1"],
-                    [EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,"n0",EMPTY,"n0"]
-  ]);
-  testState.push(1);
-  testState.push([[true,true],[true,true]]);
-    this.state.board.getPossibleNodes(1,testState);  
-    this.state.board.getPossibleNodes(2,testState);  
-    this.state.board.getPossibleNodes(3,testState);  
-    this.state.board.getPossibleNodes(4,testState);  
-    // this.state.board.getPossibleNodes(4,testState);  
-    // this.state.board.reset();
-    // this.calculateBackground();
+    this.state.board.reset();
+    this.calculateBackground();
   }
   
   Sleep(milliseconds)
@@ -98,13 +74,20 @@ class App extends React.Component {
   
   movePiece(name)
   {
-    if(!this.state.whiteIsComputer)
+    this.movePieceHuman(name);
+    if(this.state.board.checkMate === true)
+          {
+            alert("Checkmate!");
+            console.log(this.state.board.current_color + " lost!");
+          }
+    else if(this.state.board.staleMate === true)
     {
-      this.movePieceHuman(name);
-      if(this.state.blackIsComputer && this.state.selectedPiece)
-      {
-        this.computerMove();
-      }
+            alert("Stalemate!");
+            console.log("Draw!");
+    }
+    if(this.state.board.current_color == BLACK)
+    {
+      this.computerMove();
     }
   }
 
@@ -138,18 +121,6 @@ class App extends React.Component {
           }
           this.setState({"selectedPiece": false});
           this.calculateBackground();
-          
-          
-          if(this.state.board.checkMate === true)
-          {
-            alert("Checkmate!");
-            console.log(this.state.board.current_color + " lost!");
-          }
-          else if(this.state.board.staleMate === true)
-          {
-            alert("Stalemate!");
-            console.log("Draw!");
-          }
           
           
         }
@@ -346,13 +317,6 @@ class App extends React.Component {
     <div className= "reset-button">
     <Button color="#f00" title = "Reset Board" onPress={this.resetBoard}/>
     </div>
-    <div>
-    <Switch trackColor={{false: "#0f0", true: "#f00"}} onValueChange={() => (this.setState({"whiteIsComputer": !this.state.whiteIsComputer, "blackIsComputer": false}))} value={this.state.whiteIsComputer}/>
-    </div>
-    <div>
-    <Switch trackColor={{false: "#0f0", true: "#f00"}} onValueChange={() => (this.setState({"blackIsComputer": !this.state.blackIsComputer, "whiteIsComputer": false}))} value={this.state.blackIsComputer}/>
-    </div>
-
     </div>
   }
   
@@ -363,6 +327,13 @@ class Square extends React.Component{
   {
     super(props);
     this.handleClick = this.handleClick.bind(this);
+    var width = String(Math.min(100, window.innerWidth*0.115))+"px";
+    var height = String(Math.min(100, window.innerHeight*0.10))+"px";
+    this.state = 
+    {
+      imageHeight: height,
+      imageWidth: width,
+    }
   }
   
   handleClick(event)
@@ -370,16 +341,26 @@ class Square extends React.Component{
     
     this.props.onPress(this.props.name);
   }
+  updateDimensions = () => {
+    this.setState({ imageWidth: String(Math.min(100, window.innerWidth*0.08))+"px", imageHeight: String(Math.min(100, window.innerHeight*0.10))+"px" });
+  };
+  componentDidMount() {
+    window.addEventListener('resize', this.updateDimensions);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateDimensions);
+  }
   
   render(){
+    
     if(this.props.piece == null)
     {
-      return <div onClick = {this.handleClick}  className={this.props.color}>
+      return <div onClick = {this.handleClick}  style={{width: this.state.imageWidth , height: this.state.imageHeight}} className={this.props.color}>
       <div className={this.props.pieceColor}></div>
       </div>
     }
     var pieceClass = "piece " + this.props.pieceColor;
-    return <div  onClick = {this.handleClick} className={this.props.color}>
+    return <div  onClick = {this.handleClick} style={{width: this.state.imageWidth, height: this.state.imageHeight}} className={this.props.color}>
     <img alt={this.props.piece} className={pieceClass} src= {require('../public/pieces/'+this.props.piece+".png").default} />
     </div>
   }
