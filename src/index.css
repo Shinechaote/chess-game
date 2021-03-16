@@ -21,8 +21,10 @@ body {
   color: red;
   background-color: red;
   margin-top: 0.5%;
-  width: 10%;
-  height: 10%;;
+  display: inline-block;
+  max-width: 60px;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .center-screen {

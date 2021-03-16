@@ -315,7 +315,7 @@ class App extends React.Component {
     <Square onPress={this.movePiece} id="77" name="77"pieceColor={this.state.pieceBackgroundColors[63]} color={this.state.squareColors[63]} piece = {pieceDictionary[this.state.board.board[7][7]]}/>
     </div>
     <div className= "reset-button">
-    <Button color="#f00" title = "Reset Board" onPress={this.resetBoard}/>
+    <Button color="#f00" title = "Reset" onPress={this.resetBoard}/>
     </div>
     </div>
   }
@@ -327,11 +327,9 @@ class Square extends React.Component{
   {
     super(props);
     this.handleClick = this.handleClick.bind(this);
-    var width = String(Math.min(100, window.innerWidth*0.115))+"px";
-    var height = String(Math.min(100, window.innerHeight*0.10))+"px";
+    var width = String(Math.min(100, window.innerWidth*0.08))+"px";
     this.state = 
     {
-      imageHeight: height,
       imageWidth: width,
     }
   }
@@ -342,7 +340,7 @@ class Square extends React.Component{
     this.props.onPress(this.props.name);
   }
   updateDimensions = () => {
-    this.setState({ imageWidth: String(Math.min(100, window.innerWidth*0.08))+"px", imageHeight: String(Math.min(100, window.innerHeight*0.10))+"px" });
+    this.setState({ imageWidth: String(Math.min(100, window.innerWidth*0.08))+"px"});
   };
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
@@ -355,12 +353,12 @@ class Square extends React.Component{
     
     if(this.props.piece == null)
     {
-      return <div onClick = {this.handleClick}  style={{width: this.state.imageWidth , height: this.state.imageHeight}} className={this.props.color}>
+      return <div onClick = {this.handleClick}  style={{width: this.state.imageWidth , height: this.state.imageWidth}} className={this.props.color}>
       <div className={this.props.pieceColor}></div>
       </div>
     }
     var pieceClass = "piece " + this.props.pieceColor;
-    return <div  onClick = {this.handleClick} style={{width: this.state.imageWidth, height: this.state.imageHeight}} className={this.props.color}>
+    return <div  onClick = {this.handleClick} style={{width: this.state.imageWidth, height: this.state.imageWidth}} className={this.props.color}>
     <img alt={this.props.piece} className={pieceClass} src= {require('../public/pieces/'+this.props.piece+".png").default} />
     </div>
   }
