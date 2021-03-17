@@ -59,7 +59,7 @@ export default class Board {
             baseBoard.current_color = state[1];
             baseBoard.castlePossible = JSON.parse(JSON.stringify(state[2]));
             baseBoard.calculateChecks();
-
+            
             testBoard.board = JSON.parse(JSON.stringify(state[0]));
             testBoard.historyBoards = [JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board)),JSON.parse(JSON.stringify(testBoard.board))];
             testBoard.current_color = state[1];
@@ -143,7 +143,7 @@ export default class Board {
         }
         return true;
     }
-
+    
     getPossibleNodesHelper(depth, testBoard)
     {
         var nodes = 0;
@@ -375,24 +375,55 @@ export default class Board {
         switch(this.board[startRow][startCol].slice(0,1))
         {
             case "p":
-            var [isPossible , isEnPassant, isPromotion] =  this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol) ;
-            return [isPossible && this.simulateMove(startRow,startCol,destinationRow,destinationCol),false, isEnPassant, isPromotion];
+            var [isPossible , isEnPassant, isPromotion] =  this.isPawnMovePossible(startRow,startCol,destinationRow,destinationCol);
+            if(isPossible)
+            {
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol),false, isEnPassant, isPromotion];
+            }
+            else{
+                return [false,false,false,false];
+            }
             case "k":
             var [isPossible, isCastling] = this.isKingMovePossible(startRow,startCol,destinationRow,destinationCol);
-            return [isPossible && this.simulateMove(startRow,startCol,destinationRow,destinationCol), isCastling, false, false];
-            
+            if(isPossible)
+            {
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol), isCastling, false, false];
+            }
+            else{
+                return [false,false,false,false];
+            }
             case "q":
-            return [this.isQueenMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
-            
+            if(this.isQueenMovePossible(startRow,startCol,destinationRow,destinationCol))
+            {
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];   
+            }
+            else{
+                return [false,false,false,false];
+            }
             case "r":
-            return [this.isRookMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
+            if(this.isRookMovePossible(startRow,startCol,destinationRow,destinationCol))
+            {
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
+            }
+            else{
+                return [false,false,false,false];
+            }
             
             case "n":
-            return [this.isKnightMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
-            
+            if(this.isKnightMovePossible(startRow,startCol,destinationRow,destinationCol)){
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
+            }
+            else{
+                return [false,false,false,false];
+            }
             case "b":
-            return [this.isBishopMovePossible(startRow,startCol,destinationRow,destinationCol) && this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
-            
+            if(this.isBishopMovePossible(startRow,startCol,destinationRow,destinationCol))
+            {
+                return [this.simulateMove(startRow,startCol,destinationRow,destinationCol), false, false, false];
+            }
+            else{
+                return [false,false,false,false];
+            }
             default:
             console.log("Default Case bei Move Possible");
             console.log([startRow, startCol, destinationRow, destinationCol]);
@@ -546,19 +577,19 @@ export default class Board {
         {
             return true;
         }
-
+        
         var otherKingX = this.getKingPosition(1-color,board)[0];
         var otherKingY = this.getKingPosition(1-color,board)[1];
-
+        
         if(Math.abs(kingX-otherKingX) <= 1 && Math.abs(kingY-otherKingY) <= 1)
         {
             return true;
         }
-
+        
         //Zeile und Spalte checken
         //Zeile
         var row = board[kingY];
-
+        
         //Rechtsseitig vom König in der Zeile
         for(var i = kingX+1; i<8;i++)
         {

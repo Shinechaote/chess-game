@@ -50,6 +50,14 @@ class App extends React.Component {
   componentWillUnmount () {
     window.removeEventListener('keydown', this.revertMove)
   }
+
+  componentDidUpdate()
+  {
+    if(this.state.board.current_color == BLACK && !this.state.board.checkMate && !this.state.board.staleMate)
+    {
+      this.computerMove();
+    }
+  }
   
   resetBoard()
   {
@@ -57,40 +65,43 @@ class App extends React.Component {
     this.calculateBackground();
   }
   
-  Sleep(milliseconds)
-  {
-    return new Promise(resolve => setTimeout(resolve, milliseconds));
-  }
   
   computerMove()
   {
     if(!this.state.board.checkMate && !this.state.board.staleMate)
     {
-      var [startY, startX, endY, endX] = minimaxRoot(3, this.state.board, true);
-      this.state.board.movePiece(startY,startX,endY,endX, "q");  
+      var [startY, startX, endY, endX, promotion] = minimaxRoot(3, this.state.board, true);
+      this.state.board.movePiece(startY,startX,endY,endX, promotion);  
       this.calculateBackground();
     }
+    if(this.state.board.checkMate === true)
+    {
+      alert("Checkmate!");
+      console.log(this.state.board.current_color + " lost!");
+    }
+    else if(this.state.board.staleMate === true)
+    {
+      alert("Stalemate!");
+      console.log("Draw!");
+    }
+    this.calculateBackground();
   }
-  
   movePiece(name)
   {
     this.movePieceHuman(name);
     if(this.state.board.checkMate === true)
-          {
-            alert("Checkmate!");
-            console.log(this.state.board.current_color + " lost!");
-          }
+    {
+      alert("Checkmate!");
+      console.log(this.state.board.current_color + " lost!");
+    }
     else if(this.state.board.staleMate === true)
     {
-            alert("Stalemate!");
-            console.log("Draw!");
+      alert("Stalemate!");
+      console.log("Draw!");
     }
-    if(this.state.board.current_color == BLACK)
-    {
-      this.computerMove();
-    }
+    
   }
-
+  
   movePieceHuman(name)
   {
     if(!this.state.board.isInReverse())
@@ -121,8 +132,6 @@ class App extends React.Component {
           }
           this.setState({"selectedPiece": false});
           this.calculateBackground();
-          
-          
         }
         else if(startX !== endX || startY !== endY){
           //Es wurde eine eigene Figur als Ziel ausgewählt
@@ -327,7 +336,8 @@ class Square extends React.Component{
   {
     super(props);
     this.handleClick = this.handleClick.bind(this);
-    var width = String(Math.min(100, window.innerWidth*0.08))+"px";
+    var usedWidth = window.innerWidth > window.screen.width ? window.screen.width : window.innerWidth
+    var width = String(Math.min(100, usedWidth*0.08))+"px";
     this.state = 
     {
       imageWidth: width,
@@ -340,7 +350,8 @@ class Square extends React.Component{
     this.props.onPress(this.props.name);
   }
   updateDimensions = () => {
-    this.setState({ imageWidth: String(Math.min(100, window.innerWidth*0.08))+"px"});
+    var usedWidth = window.innerWidth > window.screen.width ? window.screen.width : window.innerWidth
+    this.setState({ imageWidth: String(Math.min(100, usedWidth*0.08))+"px"});
   };
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
