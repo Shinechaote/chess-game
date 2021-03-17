@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/chess-game/static/css/main.20ff4853.chunk.css",
-    "main.js": "/chess-game/static/js/main.78ec5e1c.chunk.js",
-    "main.js.map": "/chess-game/static/js/main.78ec5e1c.chunk.js.map",
+    "main.css": "/chess-game/static/css/main.4b15698a.chunk.css",
+    "main.js": "/chess-game/static/js/main.a70cfcea.chunk.js",
+    "main.js.map": "/chess-game/static/js/main.a70cfcea.chunk.js.map",
     "runtime-main.js": "/chess-game/static/js/runtime-main.51364385.js",
     "runtime-main.js.map": "/chess-game/static/js/runtime-main.51364385.js.map",
     "static/js/2.e3fdece2.chunk.js": "/chess-game/static/js/2.e3fdece2.chunk.js",
     "static/js/2.e3fdece2.chunk.js.map": "/chess-game/static/js/2.e3fdece2.chunk.js.map",
     "index.html": "/chess-game/index.html",
-    "static/css/main.20ff4853.chunk.css.map": "/chess-game/static/css/main.20ff4853.chunk.css.map",
+    "static/css/main.4b15698a.chunk.css.map": "/chess-game/static/css/main.4b15698a.chunk.css.map",
     "static/js/2.e3fdece2.chunk.js.LICENSE.txt": "/chess-game/static/js/2.e3fdece2.chunk.js.LICENSE.txt",
     "static/media/knight_white.png": "/chess-game/static/media/knight_white.75fc3627.png",
     "static/media/pieces.png": "/chess-game/static/media/pieces.38a83136.png",
@@ -17,7 +17,7 @@
   "entrypoints": [
     "static/js/runtime-main.51364385.js",
     "static/js/2.e3fdece2.chunk.js",
-    "static/css/main.20ff4853.chunk.css",
-    "static/js/main.78ec5e1c.chunk.js"
+    "static/css/main.4b15698a.chunk.css",
+    "static/js/main.a70cfcea.chunk.js"
   ]
 }
