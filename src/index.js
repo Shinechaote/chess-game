@@ -18,7 +18,7 @@ class App extends React.Component {
     {
       for(var j = 0;j<8;j++)
       {
-        colors.push((i+j) % 2 === 0 ? "black" : "white");
+        colors.push((i+j) % 2 === 0 ? "white" : "black");
       }
     }
     
@@ -208,7 +208,7 @@ class App extends React.Component {
     {
       for (var j = 0; j<8;j++)
       {
-        squareColorTemp.push((i+j) % 2 === 0 ? "black" : "white");
+        squareColorTemp.push((i+j) % 2 === 0 ? "white" : "black");
       }
     }
     this.setState({"squareColors": squareColorTemp});
