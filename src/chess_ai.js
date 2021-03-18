@@ -1,4 +1,10 @@
-let EMPTY = "  ";
+let EMPTY = -1;
+let PAWN = 0;
+let KNIGHT = 1;
+let BISHOP = 2;
+let ROOK = 3;
+let QUEEN = 4;
+let KING = 5;
 var minimaxRoot =function(depth, game, isMaximisingPlayer) {
     
     var newGameMoves = game.ugly_moves();
@@ -77,7 +83,7 @@ var evaluateBoard = function (board) {
     var totalEvaluation = 0;
     for (var i = 0; i < 8; i++) {
         for (var j = 0; j < 8; j++) {
-            totalEvaluation = totalEvaluation + getPieceValue(board[i][j], i ,j);
+            totalEvaluation = totalEvaluation + getPieceValue(board[i*8+j], i ,j);
         }
     }
     return totalEvaluation;
@@ -172,22 +178,22 @@ var getPieceValue = function (piece, y, x) {
         return 0;
     }
     var getAbsoluteValue = function (piece, isWhite, x ,y) {
-        if (piece.slice(0,1) === 'p') {
+        if (piece%8 === PAWN) {
             return 10 + ( isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x] );
-        } else if (piece.slice(0,1)  === 'r') {
+        } else if (piece%8  === ROOK) {
             return 50 + ( isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x] );
-        } else if (piece.slice(0,1)  === 'n') {
+        } else if (piece%8  === KNIGHT) {
             return 30 + knightEval[y][x];
-        } else if (piece.slice(0,1)  === 'b') {
+        } else if (piece%8  === BISHOP) {
             return 30 + ( isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x] );
-        } else if (piece.slice(0,1)  === 'q') {
+        } else if (piece%8  === QUEEN) {
             return 90 + evalQueen[y][x];
-        } else if (piece.slice(0,1)  === 'k') {
+        } else if (piece%8  === KING) {
             return 900 + ( isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x] );
         }
-        throw "Unknown piece type: " + piece.slice(0,1) ;
+        throw "Unknown piece type: " + piece%8 ;
     };
     
-    var absoluteValue = getAbsoluteValue(piece, parseInt(piece.slice(1,2)) === 0, x ,y);
-    return parseInt(piece.slice(1,2)) === 0 ? absoluteValue : -absoluteValue;
+    var absoluteValue = getAbsoluteValue(piece, piece < 8, x ,y);
+    return piece < 8 ? absoluteValue : -absoluteValue;
 };
