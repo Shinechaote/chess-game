@@ -5,6 +5,7 @@ let BISHOP = 2;
 let ROOK = 3;
 let QUEEN = 4;
 let KING = 5;
+var numberOfMoves = 0;
 var minimaxRoot =function(depth, game, isMaximisingPlayer) {
     
     var newGameMoves = game.ugly_moves();
@@ -28,6 +29,8 @@ var minimaxRoot =function(depth, game, isMaximisingPlayer) {
             bestMoveFound = newGameMove;
         }
     }
+    console.log("Evaluated: "+ numberOfMoves);
+    numberOfMoves = 0
     return bestMoveFound;
 };
 
@@ -35,6 +38,7 @@ export default minimaxRoot;
 
 var minimax = function (depth, game, alpha, beta, isMaximisingPlayer) {
     if (depth === 0) {
+        numberOfMoves++;
         return -evaluateBoard(game.board);
     }
     

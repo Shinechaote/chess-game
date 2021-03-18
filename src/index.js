@@ -342,7 +342,7 @@ class Square extends React.Component{
     super(props);
     this.handleClick = this.handleClick.bind(this);
     var usedWidth = window.innerWidth > window.screen.width ? window.screen.width : window.innerWidth
-    var width = String(Math.min(100, usedWidth*0.08))+"px";
+    var width = String(Math.min(100, usedWidth*0.06))+"px";
     this.state = 
     {
       imageWidth: width,
@@ -356,7 +356,7 @@ class Square extends React.Component{
   }
   updateDimensions = () => {
     var usedWidth = window.innerWidth > window.screen.width ? window.screen.width : window.innerWidth
-    this.setState({ imageWidth: String(Math.min(100, usedWidth*0.08))+"px"});
+    this.setState({ imageWidth: String(Math.min(100, usedWidth*0.06))+"px"});
   };
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
