@@ -122,7 +122,7 @@ export default class Board {
         {
             for(var j=0; j<8;j++)
             {
-                if(this.board[i][j] !== boardObject.board[i][j])
+                if(this.board[i*8+j] !== boardObject.board[i*8+j])
                 {
                     return false;
                 }
@@ -134,7 +134,7 @@ export default class Board {
             {
                 for(var j=0; j<8;j++)
                 {
-                    if(this.historyBoards[k][i][j] !== boardObject.historyBoards[k][i][j])
+                    if(this.historyBoards[k][i*8+j] !== boardObject.historyBoards[k][i*8+j])
                     {
                         return false;
                     }
