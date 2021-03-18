@@ -233,8 +233,6 @@ export default class Board {
             return [false,false,false,false];
         }
         var [isPossible,isCastling, isEnPassant, isPromotion] = this.isMovePossible(startRow,startCol,destinationRow,destinationCol);
-        console.log([startRow,startCol,destinationRow,destinationCol])
-        console.log(isPossible);
         if(isPossible)
         {
             this.addToMoveHistory(startRow, startCol, destinationRow, destinationCol, promotionPiece, isPossible, isCastling, isEnPassant, isPromotion);
@@ -287,7 +285,7 @@ export default class Board {
                     }
                 }
             }
-            this.moveRepitition = boardsAreEqual ? this.moveRepitition +1 : 0;
+            this.moveRepitition = boardsAreEqual ? this.moveRepitition+1 : 0;
             return [true, isCastling, isEnPassant, isPromotion];
         }
         return [false,false, false, false];
@@ -679,7 +677,7 @@ export default class Board {
         var counter = 1;
         for(i = kingY * 8+ kingX + 9; i < 64;i += 9)
         {
-            if(board[i]>>>3 === color>>>3)
+            if(board[i]>>>3 === color>>>3 ||i%8 <= kingX)
             {
                 break;
             }
@@ -702,7 +700,7 @@ export default class Board {
         counter = 1;
         for( i = kingY*8+kingX-9; i >= 0;i -= 9)
         {
-            if(board[i]>>>3 === color>>>3)
+            if(board[i]>>>3 === color>>>3 || i%8 >= kingX)
             {
                 break;
             }
@@ -727,7 +725,7 @@ export default class Board {
         
         for( i = kingY*8+kingX+7; i < 64;i += 7)
         {
-            if(board[i]>>>3 === color>>>3)
+            if(board[i]>>>3 === color>>>3 || i%8 >= kingX)
             {
                 break;
             }
@@ -749,7 +747,7 @@ export default class Board {
         counter = 1;
         for( i = kingY*8+kingX-7; i >= 0 ;i -= 7)
         {
-            if(board[i]>>>3 === color>>>3)
+            if(board[i]>>>3 === color>>>3 || i%8 <= kingX)
             {
                 break;
             }
@@ -1063,7 +1061,7 @@ export default class Board {
             var distance = Math.abs(startRow-destinationRow);
             for(var i = 1; i<distance;i++)
             {
-                if(this.board[startY*8+startX+i*7] !== EMPTY)
+                if(this.board[startY*8+startX+i*9] !== EMPTY)
                 {
                     return false;
                 }
@@ -1072,12 +1070,12 @@ export default class Board {
         else
         {
             //Von Rechts oben nach Links unten
-            startX = Math.min(7-startCol,7-destinationCol);
+            startX = Math.max(startCol,destinationCol);
             startY = Math.min(startRow,destinationRow);
             distance = Math.abs(startRow-destinationRow);
             for( i = 1; i < distance ;i++)
             {
-                if(this.board[startY*8+startX-7*i] !== EMPTY)
+                if(this.board[startY*8+startX+7*i] !== EMPTY)
                 {
                     
                     return false;

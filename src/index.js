@@ -56,13 +56,10 @@ class App extends React.Component {
   componentWillUnmount () {
     window.removeEventListener('keydown', this.revertMove)
   }
-  
+
   componentDidUpdate()
   {
-    if(this.state.board.current_color == BLACK && !this.state.board.checkMate && !this.state.board.staleMate)
-    {
-      this.computerMove();
-    }
+    console.log("Rendering done:" + (performance.now()/1000));
   }
   
   resetBoard()
@@ -78,8 +75,8 @@ class App extends React.Component {
     {
       var [startY, startX, endY, endX, promotion] = minimaxRoot(3, this.state.board, true);
       this.state.board.movePiece(startY,startX,endY,endX, promotion);  
-      this.calculateBackground();
     }
+    this.calculateBackground();
     if(this.state.board.checkMate === true)
     {
       alert("Checkmate!");
@@ -90,10 +87,10 @@ class App extends React.Component {
       alert("Stalemate!");
       console.log("Draw!");
     }
-    this.calculateBackground();
   }
   movePiece(name)
   {
+    console.log("Click performed:" + (performance.now()/1000));
     this.movePieceHuman(name);
     if(this.state.board.checkMate === true)
     {
@@ -104,6 +101,10 @@ class App extends React.Component {
     {
       alert("Stalemate!");
       console.log("Draw!");
+    }
+    if(this.state.board.current_color == BLACK && !this.state.board.checkMate && !this.state.board.staleMate)
+    {
+      this.computerMove();
     }
     
   }
@@ -144,7 +145,7 @@ class App extends React.Component {
           {
             this.state.pieceBackgroundColors[i] = "";
           }
-          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
+          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "white" : "black";
           this.state.pieceBackgroundColors[startY*8 + startX] = "";
           
           this.setState({"selectedPiece": true});
@@ -162,7 +163,7 @@ class App extends React.Component {
           {
             this.state.pieceBackgroundColors[i] =  this.state.pieceBackgroundColors[i] !== " check" ?  "": " check";
           }
-          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "black" : "white";
+          this.state.squareColors[startY*8 + startX] = (startX+startY) % 2 === 0 ? "white" : "black";
           this.state.pieceBackgroundColors[startY*8 + startX] = this.state.pieceBackgroundColors[startY*8 + startX] !== " check" ?  "": " check";
           this.setState({"selectedPiece": false});
           this.setState({"startingPiece":"aa"});
@@ -248,14 +249,14 @@ class App extends React.Component {
     return <div className="center-screen">
     <div className="row">
     <div className="row">
-    <Square onPress={this.movePiece} id="0" name="0"pieceColor={this.state.pieceBackgroundColors[0]} color={this.state.squareColors[0]} piece = {pieceDictionary[this.state.board.board[0]+1]}/>
-    <Square onPress={this.movePiece} id="1" name="1"pieceColor={this.state.pieceBackgroundColors[1]} color={this.state.squareColors[1]} piece = {pieceDictionary[this.state.board.board[1]+1]}/>
-    <Square onPress={this.movePiece} id="2" name="2"pieceColor={this.state.pieceBackgroundColors[2]} color={this.state.squareColors[2]} piece = {pieceDictionary[this.state.board.board[2]+1]}/>
-    <Square onPress={this.movePiece} id="3" name="3"pieceColor={this.state.pieceBackgroundColors[3]} color={this.state.squareColors[3]} piece = {pieceDictionary[this.state.board.board[3]+1]}/>
-    <Square onPress={this.movePiece} id="4" name="4"pieceColor={this.state.pieceBackgroundColors[4]} color={this.state.squareColors[4]} piece = {pieceDictionary[this.state.board.board[4]+1]}/>
-    <Square onPress={this.movePiece} id="5" name="5"pieceColor={this.state.pieceBackgroundColors[5]} color={this.state.squareColors[5]} piece = {pieceDictionary[this.state.board.board[5]+1]}/>
-    <Square onPress={this.movePiece} id="6" name="6"pieceColor={this.state.pieceBackgroundColors[6]} color={this.state.squareColors[6]} piece = {pieceDictionary[this.state.board.board[6]+1]}/>
-    <Square onPress={this.movePiece} id="7" name="7"pieceColor={this.state.pieceBackgroundColors[7]} color={this.state.squareColors[7]} piece = {pieceDictionary[this.state.board.board[7]+1]}/>
+    <Square onPress={this.movePiece} id="00" name="00"pieceColor={this.state.pieceBackgroundColors[0]} color={this.state.squareColors[0]} piece = {pieceDictionary[this.state.board.board[0]+1]}/>
+    <Square onPress={this.movePiece} id="01" name="01"pieceColor={this.state.pieceBackgroundColors[1]} color={this.state.squareColors[1]} piece = {pieceDictionary[this.state.board.board[1]+1]}/>
+    <Square onPress={this.movePiece} id="02" name="02"pieceColor={this.state.pieceBackgroundColors[2]} color={this.state.squareColors[2]} piece = {pieceDictionary[this.state.board.board[2]+1]}/>
+    <Square onPress={this.movePiece} id="03" name="03"pieceColor={this.state.pieceBackgroundColors[3]} color={this.state.squareColors[3]} piece = {pieceDictionary[this.state.board.board[3]+1]}/>
+    <Square onPress={this.movePiece} id="04" name="04"pieceColor={this.state.pieceBackgroundColors[4]} color={this.state.squareColors[4]} piece = {pieceDictionary[this.state.board.board[4]+1]}/>
+    <Square onPress={this.movePiece} id="05" name="05"pieceColor={this.state.pieceBackgroundColors[5]} color={this.state.squareColors[5]} piece = {pieceDictionary[this.state.board.board[5]+1]}/>
+    <Square onPress={this.movePiece} id="06" name="06"pieceColor={this.state.pieceBackgroundColors[6]} color={this.state.squareColors[6]} piece = {pieceDictionary[this.state.board.board[6]+1]}/>
+    <Square onPress={this.movePiece} id="07" name="07"pieceColor={this.state.pieceBackgroundColors[7]} color={this.state.squareColors[7]} piece = {pieceDictionary[this.state.board.board[7]+1]}/>
     </div>
     <div className="row">
     <Square onPress={this.movePiece} id="10" name="10"pieceColor={this.state.pieceBackgroundColors[8]} color={this.state.squareColors[8]} piece = {pieceDictionary[this.state.board.board[8]+1]}/>
