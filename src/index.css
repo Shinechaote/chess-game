@@ -5,6 +5,96 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  height: 100%;
+}
+
+
+.row
+{
+  width: 80%;
+  height: 80%;
+}
+
+.reset-button
+{
+  color: red;
+  background-color: red;
+  margin-top: 0.5%;
+  display: inline-block;
+  max-width: 60px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  align-items: left;
+  text-align: left;
+  margin-left: 15%;
+  margin-top: 1.5%;
+}
+
+.black
+{
+  background-color: burlywood;
+  display: inline-block;
+  position: relative;
+}
+
+.check{
+  display: inline-block;
+  position: relative;
+
+  border-radius: 70%/70%;
+    background: red;
+}
+
+.possible-position{
+
+  max-height: 35%;
+  max-width: 35%;
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  border-radius: 70%/70%;
+    background: green;
+
+}
+
+.selected
+{
+  background-color: green;
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.white
+{
+  background-color: blanchedalmond;
+  display: inline-block;
+  position: relative;
+}
+
+.piece
+{
+  max-height: 100%;
+    max-width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 }
 
 code {
